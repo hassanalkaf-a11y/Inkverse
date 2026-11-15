@@ -166,8 +166,7 @@ textarea:focus,.field input:focus{outline:none;border-color:var(--gold)}
 #splash{position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse 60% 45% at 50% 45%,#121110 0%,#000 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .9s ease,visibility .9s;cursor:pointer}
 #splash.out{opacity:0;visibility:hidden}
 #splash .sp-rise{width:260px;height:132px;overflow:hidden;display:flex;justify-content:center;align-items:flex-end}
-#splash .sp-icon{width:104px;height:104px;border-radius:24px;margin-bottom:16px;transform:translateY(130px) scale(.85);opacity:0;
-  box-shadow:0 0 0 1px rgba(201,163,90,.35),0 18px 40px rgba(0,0,0,.9),0 0 50px rgba(201,163,90,.0)}
+#splash .sp-icon{width:110px;height:110px;margin-bottom:6px;overflow:visible;transform:translateY(130px) scale(.85);opacity:0;filter:drop-shadow(0 0 0 rgba(231,205,148,0))}
 #splash .sp-line{width:0;height:1px;background:linear-gradient(90deg,transparent,#8f6a2c 15%,#f6dfa0 50%,#8f6a2c 85%,transparent);box-shadow:0 0 12px rgba(231,205,148,.55)}
 #splash .sp-word{margin-top:26px;font-family:var(--latin);font-weight:500;font-size:40px;letter-spacing:.3em;margin-inline-start:.3em;direction:ltr;display:flex;
   background:linear-gradient(100deg,#8f6a2c 0%,#e7cd94 30%,#fff3cf 45%,#e7cd94 60%,#8f6a2c 100%);background-size:250% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -177,7 +176,7 @@ textarea:focus,.field input:focus{outline:none;border-color:var(--gold)}
 #splash.go .sp-word span{animation:spWord .8s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:calc(1.85s + var(--i)*.07s)}
 #splash.go .sp-word{animation:spShine 2s ease 2.4s forwards}
 @keyframes spLine{to{width:240px}}
-@keyframes spRiseIcon{0%{transform:translateY(130px) scale(.85);opacity:1}100%{transform:none;opacity:1;box-shadow:0 0 0 1px rgba(201,163,90,.35),0 18px 40px rgba(0,0,0,.9),0 0 50px rgba(201,163,90,.18)}}
+@keyframes spRiseIcon{0%{transform:translateY(130px) scale(.85);opacity:1}100%{transform:none;opacity:1;filter:drop-shadow(0 0 14px rgba(231,205,148,.35))}}
 @keyframes spWord{to{opacity:1;transform:none;filter:none}}
 @keyframes spShine{to{background-position:0 0}}
 @media (max-width:560px){#splash .sp-word{font-size:30px}}
@@ -199,7 +198,7 @@ textarea:focus,.field input:focus{outline:none;border-color:var(--gold)}
 </head>
 <body>
 <div id="splash" aria-hidden="true">
-  <div class="sp-rise"><img class="sp-icon" src="icon-512.png" alt=""></div>
+  <div class="sp-rise"><svg class="sp-icon" viewBox="0 0 24 24"><defs><linearGradient id="spg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6dfa0"/><stop offset=".5" stop-color="#c9963f"/><stop offset="1" stop-color="#e8c47a"/></linearGradient></defs><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z" fill="none" stroke="url(#spg)" stroke-width="1.1" stroke-linejoin="round"/><path d="M12 6.5v13" stroke="#d6a956" stroke-width="1.1" stroke-linecap="round"/></svg></div>
   <div class="sp-line"></div>
   <div class="sp-word"><span style="--i:0">I</span><span style="--i:1">N</span><span style="--i:2">K</span><span style="--i:3">V</span><span style="--i:4">E</span><span style="--i:5">R</span><span style="--i:6">S</span><span style="--i:7">E</span></div>
 </div>
