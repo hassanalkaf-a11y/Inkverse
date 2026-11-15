@@ -84,6 +84,8 @@ select option{background:#111;color:var(--ink)}
   border:1px solid rgba(201,163,90,.18);box-shadow:-6px 8px 18px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.04)}
 .cover::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:7px;background:linear-gradient(90deg,rgba(255,255,255,.05),rgba(0,0,0,.5));border-inline-end:1px solid rgba(201,163,90,.18)}
 .cover::after{content:"";position:absolute;inset:7px;inset-inline-start:13px;border:1px solid rgba(201,163,90,.3);pointer-events:none}
+.cover.img::after{display:none}.cover.img::before{background:linear-gradient(90deg,rgba(0,0,0,.35),rgba(255,255,255,.08));border:0}
+.cover.img .badge{background:rgba(0,0,0,.6);padding:1px 6px;border-radius:999px}
 .cover .ct{font-family:var(--display);font-weight:700;font-size:var(--tf,19px);line-height:1.25;color:var(--gold2);position:relative;z-index:1;padding-inline-start:4px}
 .cover .ca{font-size:10.5px;color:var(--gold);opacity:.8;position:relative;z-index:1;padding-inline-start:4px}
 .cover .orn{position:absolute;left:50%;top:53%;width:34%;transform:translate(-50%,-50%);color:var(--gold);opacity:.45}
@@ -294,11 +296,33 @@ const files = {
   async get(id){if(this.mem.has(id))return this.mem.get(id);if(!this.db)return null;try{const r=await this.tx("readonly",s=>s.get(id));if(r)this.mem.set(id,r);return r}catch(e){return null}}
 };
 
+// ---- covers taken from the first page of each book's PDF ----
+const COVERS = new Map(), coverTried = new Set();
+async function ensureCover(b){
+  if(!b.fileId || b.fileType==="txt" || coverTried.has(b.fileId)) return;
+  coverTried.add(b.fileId);
+  try{
+    const key = "cover:"+b.fileId;
+    let url = await files.get(key);
+    if(!url){
+      const rec = await loadBook(b); await loadPdfJs();
+      const pdf = await pdfjsLib.getDocument({data:new Uint8Array(rec.data.slice(0))}).promise;
+      const page = await pdf.getPage(1), base = page.getViewport({scale:1}), vp = page.getViewport({scale:360/base.width});
+      const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+      await page.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+      url = c.toDataURL("image/jpeg",.85); files.put(key,url);
+    }
+    COVERS.set(b.fileId,url); render();
+  }catch(e){}
+}
 function coverHTML(b){
   const tint = TINTS[hash(b.title)%TINTS.length];
   const s = state[b.id]||{};
+  const img = b.fileId && COVERS.get(b.fileId);
+  if(!img) setTimeout(()=>ensureCover(b),0);
   const badge = s.shelf==="reading" ? `<span class="badge">${s.progress||0}%</span><div class="pb"><i style="width:${s.progress||0}%"></i></div>`
               : s.shelf==="done" ? `<span class="badge">${I.check}</span>` : "";
+  if(img) return `<div class="cover img" style="background:#111 url('${img}') center/cover no-repeat">${s.fav?`<span class="fav"></span>`:""}${badge}</div>`;
   return `<div class="cover" style="background:radial-gradient(ellipse at 70% 15%,rgba(255,255,255,.05),transparent 55%),linear-gradient(165deg,${tint},#030303)">
     ${s.fav?`<span class="fav"></span>`:""}${badge}${b.fileId?`<span class="pdfdot"></span>`:""}
     <div class="orn">${ORN_SVG[b.genre]||ORN_SVG._}</div>
@@ -385,7 +409,7 @@ async function loadBook(b){
   if(!b.fileId) return null;
   const cached = await files.get(b.fileId); if(cached) return cached;
   const res = await fetch(b.fileId);
-  if(!res.ok) throw new Error("تعذّر تحميل ملف الكتاب.");
+  if(!res.ok) throw new Error(res.status===404?"ملف الكتاب لم يُرفع بعد.":"تعذّر تحميل ملف الكتاب.");
   const buf = await res.arrayBuffer();
   const rec = b.fileType==="txt" ? {type:"txt",text:new TextDecoder().decode(buf)} : {type:"pdf",data:buf};
   files.put(b.fileId,rec);
