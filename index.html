@@ -159,6 +159,32 @@ textarea:focus,.field input:focus{outline:none;border-color:var(--gold)}
 .rmarks button:hover{background:#151515}
 .rmarks .none{color:var(--muted);padding:6px 10px 10px;font-size:13px}
 
+
+/* splash */
+#splash{position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse 60% 45% at 50% 45%,#141210 0%,#000 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;transition:opacity .9s ease,visibility .9s;cursor:pointer}
+#splash.out{opacity:0;visibility:hidden}
+#splash .sp-book{width:92px;height:auto;overflow:visible;opacity:0}
+#splash .sp-book path{fill:none;stroke:url(#spg);}
+#splash .sp-book path+path{stroke:#d6a956}
+#splash .sp-book path{stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:80;stroke-dashoffset:80}
+#splash .sp-word{font-family:var(--latin);font-weight:500;font-size:56px;letter-spacing:.32em;margin-inline-start:.32em;direction:ltr;display:flex;
+  background:linear-gradient(100deg,#8f6a2c 0%,#e7cd94 30%,#fff3cf 45%,#e7cd94 60%,#8f6a2c 100%);background-size:250% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;color:transparent}
+#splash .sp-word span{opacity:0;transform:translateY(14px);filter:blur(6px);display:inline-block}
+#splash .sp-line{width:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+#splash .sp-sub{font-family:var(--display);font-size:17px;color:var(--muted);opacity:0;letter-spacing:.04em}
+#splash.go .sp-book{animation:spFade 1s ease forwards}
+#splash.go .sp-book path{animation:spDraw 1.6s ease forwards}
+#splash.go .sp-word span{animation:spRise .9s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:calc(.45s + var(--i)*.08s)}
+#splash.go .sp-word{animation:spShine 2.4s ease 1.1s forwards}
+#splash.go .sp-line{animation:spLine 1.2s ease 1.2s forwards}
+#splash.go .sp-sub{animation:spFade 1s ease 1.6s forwards}
+@keyframes spDraw{to{stroke-dashoffset:0}}
+@keyframes spFade{to{opacity:1}}
+@keyframes spRise{to{opacity:1;transform:none;filter:none}}
+@keyframes spShine{to{background-position:0 0}}
+@keyframes spLine{to{width:180px}}
+@media (max-width:560px){#splash .sp-word{font-size:42px}}
+@media (prefers-reduced-motion:reduce){#splash *{animation-duration:.01s!important;animation-delay:0s!important}}
 @media (max-width:560px){
   .wrap{padding:0 16px}
   .intro{margin-top:26px}.intro h1{font-size:32px}
@@ -175,6 +201,13 @@ textarea:focus,.field input:focus{outline:none;border-color:var(--gold)}
 </style>
 </head>
 <body>
+<div id="splash" aria-hidden="true">
+  <svg class="sp-book" viewBox="0 0 24 24"><defs><linearGradient id="spg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6dfa0"/><stop offset=".5" stop-color="#c9963f"/><stop offset="1" stop-color="#e8c47a"/></linearGradient></defs>
+    <path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z"/><path d="M12 6.5v13" stroke="#d6a956"/></svg>
+  <div class="sp-word"><span style="--i:0">I</span><span style="--i:1">n</span><span style="--i:2">k</span><span style="--i:3">v</span><span style="--i:4">e</span><span style="--i:5">r</span><span style="--i:6">s</span><span style="--i:7">e</span></div>
+  <div class="sp-line"></div>
+  <div class="sp-sub">مكتبة الروايات</div>
+</div>
 <header>
   <div class="wrap">
     <div class="top">
@@ -486,6 +519,14 @@ $("modal").addEventListener("click",e=>{
   if(e.target.closest("[data-fav]")){ s.fav=!s.fav; save(); openBook(id); return; }
 });
 $("modal").addEventListener("input",e=>{ const id=$("modal").dataset.id; if(id && e.target.id==="notes"){ st(id).notes=e.target.value; save(); } });
+
+// ---- splash screen ----
+(()=>{ const sp=$("splash"); if(!sp) return;
+  let gone=false; const hide=()=>{ if(gone) return; gone=true; sp.classList.add("out"); setTimeout(()=>sp.remove(),1000); };
+  const start=()=>{ sp.classList.add("go"); setTimeout(hide,3400); };
+  sp.addEventListener("click",hide);
+  Promise.race([document.fonts?document.fonts.ready:Promise.resolve(), new Promise(r=>setTimeout(r,700))]).then(start);
+})();
 
 render();
 files.init();
