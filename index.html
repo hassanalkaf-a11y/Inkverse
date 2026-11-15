@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inkverse</title>
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="application-name" content="Inkverse">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Inkverse">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#000;--s1:#0a0a0a;--s2:#111;--s3:#171717;--line:#1c1c1c;--line2:#2a2a2a;
+  --ink:#eee6d8;--muted:#857d70;--dim:#5a544b;
+  --gold:#c9a35a;--gold2:#e7cd94;--goldd:#7d6230;--goldline:rgba(201,163,90,.28);
+  --display:"Amiri",serif;--ui:"IBM Plex Sans Arabic",system-ui,sans-serif;--latin:"Cormorant Garamond",serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#000}
+body{margin:0;color:var(--ink);font:15px/1.65 var(--ui);min-height:100vh}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 70% 40% at 50% -8%,rgba(201,163,90,.09),transparent 70%),radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(0,0,0,.9))}
+button{font:inherit;color:inherit}
+.ic{width:1.15em;height:1.15em;vertical-align:-.2em;flex:none}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+
+/* header */
+header{padding-top:env(safe-area-inset-top);position:sticky;top:0;z-index:5;background:rgba(0,0,0,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;gap:10px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;margin-left:auto}
+.brand img{width:34px;height:34px;border-radius:9px;border:1px solid var(--line2)}
+.brand b{font-family:var(--latin);font-weight:600;font-size:25px;letter-spacing:.06em;color:var(--gold2)}
+.iconbtn{width:40px;height:40px;display:grid;place-items:center;border-radius:50%;border:1px solid transparent;background:none;cursor:pointer;color:var(--ink);font-size:18px}
+.iconbtn:hover{border-color:var(--line2)}
+.iconbtn.gold{color:#000;background:var(--gold)}
+.searchrow{display:none;padding:0 0 12px}
+.searchrow.on{display:block}
+.searchrow input{width:100%;background:transparent;border:0;border-bottom:1px solid var(--line2);color:var(--ink);font:inherit;font-size:16px;padding:10px 2px;outline:none}
+.searchrow input:focus{border-color:var(--gold)}
+.searchrow input::placeholder{color:var(--dim)}
+.tabs{display:flex;gap:22px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{white-space:nowrap;border:0;background:none;color:var(--muted);font-size:14px;padding:4px 0 12px;cursor:pointer;position:relative}
+.tab b{font-weight:400;color:var(--dim);font-size:12px;margin-inline-start:4px}
+.tab.on{color:var(--gold2)}
+.tab.on::after{content:"";position:absolute;inset-inline:0;bottom:-1px;height:1px;background:var(--gold)}
+
+/* intro */
+.intro{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:34px 0 8px}
+.intro h1{font-family:var(--display);font-weight:700;font-size:38px;line-height:1.1;margin:0}
+.intro p{margin:6px 0 0;color:var(--muted);font-size:13.5px}
+.filters{display:flex;gap:14px}
+select{appearance:none;-webkit-appearance:none;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--line2);font:inherit;font-size:13.5px;padding:6px 2px 6px 18px;cursor:pointer;
+  background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);background-position:left 6px center,left 1px center;background-size:5px 5px;background-repeat:no-repeat}
+select option{background:#111;color:var(--ink)}
+.adminbar{margin-top:18px;padding:10px 14px;font-size:13px;color:var(--gold2);border:1px solid var(--goldline);border-radius:6px;background:rgba(201,163,90,.04)}
+.adminbar[hidden]{display:none}
+
+/* continue */
+.cont{display:flex;gap:16px;align-items:center;margin-top:22px;padding:14px 16px;cursor:pointer;background:var(--s1);border:1px solid var(--line);border-inline-start:2px solid var(--gold);border-radius:6px}
+.cont .cover{width:54px;flex:none;--tf:10px;padding:8px 6px}
+.cont .cover .ca,.cont .cover .orn,.cont .cover .badge,.cont .cover .pdfdot,.cont .cover .fav,.cont .cover .pb{display:none}
+.cont .k{font-size:12px;color:var(--gold)}
+.cont .t{font-family:var(--display);font-size:22px;font-weight:700;line-height:1.25}
+.cont .p{color:var(--muted);font-size:12.5px;margin:2px 0 8px}
+.cont .bar2{height:2px;background:var(--line2);max-width:280px}.cont .bar2 i{display:block;height:100%;background:var(--gold)}
+.cont .go{margin-inline-start:auto}
+
+/* shelves */
+.grid{padding:26px 0 80px}
+.shelf{display:flex;align-items:flex-end;padding:0 4px;min-height:110px}
+.ledge{height:1px;margin:0 0 46px;position:relative;background:linear-gradient(90deg,transparent,var(--goldd) 12%,var(--gold) 50%,var(--goldd) 88%,transparent)}
+.ledge::after{content:"";position:absolute;inset-inline:6%;top:1px;height:26px;background:radial-gradient(ellipse 50% 100% at 50% 0,rgba(201,163,90,.10),transparent 70%)}
+.card{cursor:pointer;flex:0 0 var(--bw,130px);transition:transform .25s ease;transform-origin:bottom}
+.card:hover{transform:translateY(-6px)}
+.cover{aspect-ratio:2/3;position:relative;overflow:hidden;border-radius:7px 3px 3px 7px;padding:16px 12px 12px;display:flex;flex-direction:column;justify-content:space-between;text-align:center;
+  border:1px solid rgba(201,163,90,.18);box-shadow:-6px 8px 18px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.04)}
+.cover::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:7px;background:linear-gradient(90deg,rgba(255,255,255,.05),rgba(0,0,0,.5));border-inline-end:1px solid rgba(201,163,90,.18)}
+.cover::after{content:"";position:absolute;inset:7px;inset-inline-start:13px;border:1px solid rgba(201,163,90,.3);pointer-events:none}
+.cover .ct{font-family:var(--display);font-weight:700;font-size:var(--tf,19px);line-height:1.25;color:var(--gold2);position:relative;z-index:1;padding-inline-start:4px}
+.cover .ca{font-size:10.5px;color:var(--gold);opacity:.8;position:relative;z-index:1;padding-inline-start:4px}
+.cover .orn{position:absolute;left:50%;top:53%;width:34%;transform:translate(-50%,-50%);color:var(--gold);opacity:.45}
+.cover .orn svg{display:block;width:100%;height:auto}
+.cover .pb{position:absolute;inset-inline:8px 0;bottom:0;height:2px;background:rgba(255,255,255,.06);z-index:2}
+.cover .pb i{display:block;height:100%;background:var(--gold)}
+.badge{position:absolute;top:10px;inset-inline-end:10px;z-index:2;font-size:10px;color:var(--gold2);display:inline-flex;gap:3px;align-items:center}
+.fav{position:absolute;top:0;inset-inline-end:14px;z-index:3;width:14px;height:22px;background:var(--gold);clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%)}
+.pdfdot{position:absolute;bottom:9px;inset-inline-end:9px;z-index:2;width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.empty{width:100%;text-align:center;color:var(--muted);padding:30px 10px;font-family:var(--display);font-size:20px}
+.empty .ic{width:34px;height:34px;color:var(--gold);opacity:.7;display:block;margin:0 auto 8px}
+
+/* sheet */
+.scrim{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:18px}
+.scrim.on{display:flex}
+.modal{background:var(--s1);border:1px solid var(--line2);border-top-color:var(--goldline);border-radius:14px;max-width:680px;width:100%;max-height:90vh;overflow:auto;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.9)}
+.close{position:absolute;top:14px;inset-inline-end:14px;z-index:3}
+.mhead{display:flex;gap:22px;padding:28px 24px 18px;align-items:flex-start}
+.mhead .cover{width:132px;flex:none;--tf:20px}
+.mbody{flex:1;min-width:0}
+.mbody h3{font-family:var(--display);font-size:32px;line-height:1.2;margin:0 0 2px}
+.mbody .by{color:var(--gold);font-family:var(--display);font-size:18px;margin-bottom:12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;color:var(--muted);border:1px solid var(--line2);padding:2px 10px;border-radius:999px}
+.summary{margin:0;padding:0 24px 20px;font-family:var(--display);font-size:18px;line-height:1.9;color:#d9d1c3}
+.section{padding:0 24px 22px}
+.section h4{font-size:12px;font-weight:500;color:var(--gold);margin:0 0 10px;display:flex;align-items:center;gap:10px}
+.section h4::after{content:"";flex:1;height:1px;background:var(--line)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line2);background:transparent;color:var(--ink);font-size:14px;padding:10px 16px;border-radius:6px;cursor:pointer;transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--gold)}
+.btn.on{border-color:var(--gold);color:var(--gold2);background:rgba(201,163,90,.06)}
+.btn.primary{background:var(--gold);border-color:var(--gold);color:#000;font-weight:600}
+.btn.primary:hover{background:var(--gold2)}
+.btn.big{padding:13px 22px;font-size:15px}
+.btn.danger{color:#d98a7c}
+.btn:disabled{opacity:.5}
+.row2{display:flex;gap:8px;flex-wrap:wrap}
+.hint{color:var(--muted);font-size:12.5px;margin-top:8px}
+.stars{display:flex;gap:6px;font-size:22px;cursor:pointer;user-select:none}
+.stars span{color:var(--line2)}.stars span.on{color:var(--gold)}
+input[type=range]{width:100%;accent-color:var(--gold)}
+textarea,.field input,.field select{width:100%;font:inherit;background:#050505;color:var(--ink);border:1px solid var(--line2);border-radius:6px;padding:10px 12px}
+.field select{background-image:none;padding:10px 12px}
+textarea:focus,.field input:focus{outline:none;border-color:var(--gold)}
+.form{padding:30px 24px 24px;display:grid;gap:14px}
+.form h3{font-family:var(--display);margin:0;font-size:28px}
+.field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,90px);background:#0b0b0b;color:var(--gold2);border:1px solid var(--goldline);padding:10px 18px;border-radius:6px;font-size:14px;transition:transform .25s;z-index:60;white-space:nowrap}
+.toast.on{transform:translate(-50%,0)}
+
+/* reader */
+.reader{position:fixed;inset:0;z-index:40;background:#000;display:none;flex-direction:column}
+.reader.on{display:flex}
+.rbar{padding-top:calc(8px + env(safe-area-inset-top))!important;display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.rbar .rt{flex:1;font-family:var(--display);font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--gold2);padding:0 6px}
+.rbtn{width:40px;height:40px;display:grid;place-items:center;background:none;border:1px solid var(--line);border-radius:8px;color:var(--ink);cursor:pointer;font-size:17px}
+.rbtn:disabled{opacity:.3}
+.rbtn.marked{background:var(--gold);color:#000;border-color:var(--gold)}
+.rprog{height:1px;background:var(--line)}.rprog i{display:block;height:100%;background:var(--gold);transition:width .2s}
+.rstage{flex:1;overflow:auto;display:flex;justify-content:center;align-items:flex-start;padding:14px}
+.rstage canvas{background:#fff;box-shadow:0 0 0 1px #1a1a1a,0 20px 50px rgba(0,0,0,.8)}
+.rtext{max-width:640px;width:100%;padding:24px 18px 60px;font-family:var(--display);font-size:21px;line-height:2;white-space:pre-wrap;word-wrap:break-word;color:#e3dbcc}
+.rnav{padding-bottom:calc(10px + env(safe-area-inset-bottom))!important;display:flex;align-items:center;gap:10px;padding:10px;border-top:1px solid var(--line)}
+.rnav .rbtn{flex:1;height:46px;width:auto}
+.rpage{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.rpage input{width:60px;background:#0b0b0b;color:var(--ink);border:1px solid var(--line2);border-radius:6px;padding:7px;text-align:center;font:inherit}
+.rload{color:var(--muted);margin:auto;text-align:center;font-family:var(--display);font-size:19px}
+.rmarks{display:none;position:absolute;top:58px;inset-inline-start:10px;z-index:3;background:#0b0b0b;border:1px solid var(--line2);border-radius:10px;min-width:220px;max-height:50vh;overflow:auto;padding:6px;box-shadow:0 20px 50px #000}
+.rmarks.on{display:block}
+.rmarks h5{margin:6px 10px;font-size:12px;font-weight:500;color:var(--gold)}
+.rmarks button{display:flex;justify-content:space-between;width:100%;background:none;border:0;padding:10px;border-radius:6px;cursor:pointer}
+.rmarks button:hover{background:#151515}
+.rmarks .none{color:var(--muted);padding:6px 10px 10px;font-size:13px}
+
+@media (max-width:560px){
+  .wrap{padding:0 16px}
+  .intro{margin-top:26px}.intro h1{font-size:32px}
+  .filters{width:100%}.filters select{flex:1}
+  .scrim{align-items:flex-end;padding:0}
+  .modal{border-radius:16px 16px 0 0;max-height:92vh;border-inline:0;border-bottom:0}
+  .modal::before{content:"";display:block;width:38px;height:4px;border-radius:4px;background:var(--line2);margin:10px auto 0}
+  .mhead{padding:16px 18px 14px;gap:16px}.mhead .cover{width:104px;--tf:16px}
+  .mbody h3{font-size:26px}
+  .summary,.section{padding-inline:18px}
+  .grid2{grid-template-columns:1fr}
+  .ledge{margin-bottom:38px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand"><img src="icon-192.png" alt=""><b>Inkverse</b></div>
+      <button class="iconbtn" id="searchBtn" aria-label="بحث"></button>
+    </div>
+    <div class="searchrow" id="searchRow"><input id="q" placeholder="ابحث بالعنوان أو الكاتب…" autocomplete="off"></div>
+    <div class="tabs" id="tabs"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="cont"></div>
+  <div class="intro">
+    <div><h1 id="heading">المكتبة</h1><p id="sub"></p></div>
+    <div class="filters">
+      <select id="genre"></select>
+      <select id="sort">
+        <option value="recent">الأحدث إضافة</option>
+        <option value="title">العنوان</option>
+        <option value="author">الكاتب</option>
+        <option value="year">الأقدم نشرًا</option>
+        <option value="yearDesc">الأحدث نشرًا</option>
+        <option value="rating">تقييمي</option>
+      </select>
+    </div>
+  </div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<div class="scrim" id="scrim"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<div class="reader" id="reader">
+  <div class="rbar">
+    <button class="rbtn" id="rClose" aria-label="إغلاق"></button>
+    <div class="rt" id="rTitle" dir="auto"></div>
+    <button class="rbtn" id="rZoomOut" aria-label="تصغير"></button>
+    <button class="rbtn" id="rZoomIn" aria-label="تكبير"></button>
+    <button class="rbtn" id="rMark" aria-label="علامة"></button>
+    <button class="rbtn" id="rMarks" aria-label="العلامات"></button>
+  </div>
+  <div class="rprog"><i id="rProg"></i></div>
+  <div class="rmarks" id="rMarkList"></div>
+  <div class="rstage" id="rStage"></div>
+  <div class="rnav" id="rNav">
+    <button class="rbtn" id="rPrev" aria-label="السابقة"></button>
+    <div class="rpage"><input id="rNum" type="number" min="1"><span id="rTotal"></span></div>
+    <button class="rbtn" id="rNext" aria-label="التالية"></button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script>
+const I={"book": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z\"/><path d=\"M12 6.5v13\"/></svg>", "search": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"6.5\"/><path d=\"M20 20l-4.2-4.2\"/></svg>", "plus": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg>", "close": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 6l12 12M18 6L6 18\"/></svg>", "heart": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z\"/></svg>", "heartf": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"currentColor\" stroke=\"none\" aria-hidden=\"true\"><path d=\"M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z\"/></svg>", "upload": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 15V4M7.5 8.5L12 4l4.5 4.5\"/><path d=\"M5 15v3.5c0 .8.7 1.5 1.5 1.5h11c.8 0 1.5-.7 1.5-1.5V15\"/></svg>", "check": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg>", "star": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"currentColor\" stroke=\"none\" aria-hidden=\"true\"><path d=\"M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8 6.8 19.6l1-5.8L3.5 9.7l5.9-.8z\"/></svg>", "left": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 5l-7 7 7 7\"/></svg>", "right": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 5l7 7-7 7\"/></svg>", "zin": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"6.5\"/><path d=\"M20 20l-4.2-4.2M11 8.5v5M8.5 11h5\"/></svg>", "zout": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"6.5\"/><path d=\"M20 20l-4.2-4.2M8.5 11h5\"/></svg>", "bookmark": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 4h12v16l-6-4-6 4z\"/></svg>", "trash": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13\"/></svg>", "swap": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 8h13l-3-3M20 16H7l3 3\"/></svg>"};
+I.list='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg>';
+const ORN_SVG={"Romance": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z\"/><path d=\"M12 7.4V20\"/></svg>", "Adventure": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"5\" r=\"2\"/><path d=\"M12 7v13M8 10h8M5 13c0 4 3 7 7 7s7-3 7-7\"/></svg>", "Gothic": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M15 4a8 8 0 1 0 5 13A7 7 0 0 1 15 4z\"/><path d=\"M19 3.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z\"/></svg>", "Literary": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 3.5C12 4 7 9 5 19.5\"/><path d=\"M20 3.5c-1 5-4 8-9 9.5l2-3c-2 .5-4 2-5.5 4.5\"/></svg>", "Historical": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 18.5h16M5 18.5L4 8l5 4 3-6 3 6 5-4-1 10.5z\"/><circle cx=\"12\" cy=\"6\" r=\".8\"/></svg>", "Science Fiction": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"5\"/><ellipse cx=\"12\" cy=\"12\" rx=\"10.5\" ry=\"3.5\" transform=\"rotate(-20 12 12)\"/></svg>", "Horror": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z\"/><circle cx=\"12\" cy=\"12\" r=\"3.2\"/><path d=\"M12 2v2M5 4l1.2 1.6M19 4l-1.2 1.6M12 20v2\"/></svg>", "Mystery": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"10\" cy=\"10\" r=\"6\"/><path d=\"M14.5 14.5L20 20\"/><path d=\"M10 7v.01M10 9.5V13\"/></svg>", "Fantasy": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z\"/><path d=\"M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z\"/></svg>", "_": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 3l9 9-9 9-9-9z\"/><path d=\"M12 8l4 4-4 4-4-4z\"/></svg>"};
+const FALLBACK = [{"id": "hol", "title": "الهول", "author": "أحمد خالد توفيق", "year": 2014, "genre": "Horror", "summary": "مجموعة من ثماني قصص رعب للعرّاب أحمد خالد توفيق، نُشرت أولًا متفرقة ثم جُمعت في كتاب واحد. من بينها «زوزانكا» و«دبة النملة» و«mutilated.com» والقصة التي تحمل اسم الكتاب."}, {"id": "hb1", "title": "حدث بالفعل", "author": "محمد عصمت", "year": 2017, "genre": "Horror", "series": "الجزء 1 من 3", "summary": "الجزء الأول من سلسلة قصص رعب يقول محمد عصمت إنها وقعت فعلًا، وقد ترجمها وأعدّها بأسلوبه."}, {"id": "hb2", "title": "حدث بالفعل 2", "author": "محمد عصمت", "year": 2018, "genre": "Horror", "series": "الجزء 2 من 3", "summary": "رحلة ثانية مع قصص رعب حقيقية، وفي هذا الجزء يربط الكاتب أدب الرعب بقضايا إنسانية واجتماعية."}, {"id": "hb3", "title": "حدث بالفعل 3", "author": "محمد عصمت", "genre": "Horror", "series": "الجزء 3 من 3", "summary": "الجزء الثالث من سلسلة «حدث بالفعل»، ويحمل المزيد من قصص الرعب الحقيقية."}, {"id": "arss", "title": "آرسس", "author": "أحمد آل حمدان", "year": 2023, "genre": "Science Fiction", "summary": "رواية سعودية تمزج الإثارة بالخيال العلمي والغموض، وتطرح سؤالًا مقلقًا: هل يستطيع الإنسان أن يغيّر قدره لو أُتيحت له العودة إلى الماضي؟"}, {"id": "bab", "title": "باب اللعنات", "author": "محمد عصمت", "year": 2019, "genre": "Horror", "pages": 215, "summary": "رواية رعب لمحمد عصمت، تدور حول باب للعنات لا يُعرف من سيفتحه، وعلى من ستنفتح لعناته."}, {"id": "t13", "title": "ثلاثة عشر لغزاً", "author": "أجاثا كريستي", "year": 1932, "genre": "Mystery", "summary": "ثلاث عشرة قضية غامضة، تُروى في جلسات «نادي ليلة الثلاثاء». في كل جلسة يطرح أحد الحاضرين لغزًا، وتحلّه الآنسة ماربل بدهائها الهادئ."}, {"id": "jdt", "title": "جدتي المريبة", "author": "مها آدم", "year": 2022, "genre": "Fiction", "pages": 270, "summary": "رواية للكاتبة مها آدم، صدرت عام 2022."}, {"id": "zik", "title": "أرض زيكولا", "author": "عمرو عبدالحميد", "year": 2010, "genre": "Fantasy", "summary": "يسقط خالد في أرض زيكولا، وهي عالم غريب يتعامل أهله بوحدات من الذكاء بدل المال. الفقير فيها يفقد عقله شيئًا فشيئًا، وعلى خالد أن ينجو ويجد طريق العودة."}];
+const GENRES = {"Horror":"رعب","Mystery":"غموض","Fantasy":"فانتازيا","Science Fiction":"خيال علمي","Fiction":"رواية","Romance":"رومانسية","Adventure":"مغامرة","Historical":"تاريخية","Literary":"أدبية"};
+const gname = g => GENRES[g] || g || "رواية";
+const SHELVES = [{key:"all",label:"الكل"},{key:"reading",label:"أقرأها"},{key:"want",label:"سأقرأها"},{key:"done",label:"أنهيتها"},{key:"fav",label:"المفضلة"}];
+const TINTS = ["#151515","#0f1311","#141010","#0f1016","#13110d","#0c0c0c","#120f13"];
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k,d){try{const v=localStorage.getItem("inkverse:"+k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem("inkverse:"+k,JSON.stringify(v))}catch(e){}}
+};
+let state = store.get("state",{});
+let view = {shelf:"all",q:"",genre:"",sort:"recent"};
+let BOOKS = [], LOADED = false;
+const books = () => BOOKS;
+const st = id => state[id] || (state[id] = {shelf:"",rating:0,progress:0,fav:false,notes:""});
+const save = () => store.set("state",state);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const hash = s => [...String(s)].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
+const errMsg = e => (e&&e.message)||(e&&e.code)||"حدث خطأ";
+
+// ---- local cache of downloaded book files ----
+const files = {
+  mem:new Map(), db:null,
+  async init(){ try{ this.db = await new Promise((res,rej)=>{const r=indexedDB.open("inkverse-books",1);
+      r.onupgradeneeded=()=>r.result.createObjectStore("files");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}); }catch(e){this.db=null} },
+  tx(mode,fn){return new Promise((res,rej)=>{const t=this.db.transaction("files",mode);const q=fn(t.objectStore("files"));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)})},
+  async put(id,rec){this.mem.set(id,rec);if(this.db)try{await this.tx("readwrite",s=>s.put(rec,id))}catch(e){}},
+  async get(id){if(this.mem.has(id))return this.mem.get(id);if(!this.db)return null;try{const r=await this.tx("readonly",s=>s.get(id));if(r)this.mem.set(id,r);return r}catch(e){return null}}
+};
+
+function coverHTML(b){
+  const tint = TINTS[hash(b.title)%TINTS.length];
+  const s = state[b.id]||{};
+  const badge = s.shelf==="reading" ? `<span class="badge">${s.progress||0}%</span><div class="pb"><i style="width:${s.progress||0}%"></i></div>`
+              : s.shelf==="done" ? `<span class="badge">${I.check}</span>` : "";
+  return `<div class="cover" style="background:radial-gradient(ellipse at 70% 15%,rgba(255,255,255,.05),transparent 55%),linear-gradient(165deg,${tint},#030303)">
+    ${s.fav?`<span class="fav"></span>`:""}${badge}${b.fileId?`<span class="pdfdot"></span>`:""}
+    <div class="orn">${ORN_SVG[b.genre]||ORN_SVG._}</div>
+    <div class="ct" dir="auto">${esc(b.title)}</div><div class="ca" dir="auto">${esc(b.author)}</div></div>`;
+}
+
+function filtered(){
+  const q = view.q.trim().toLowerCase();
+  const list = books().filter(b=>{
+    const s = state[b.id]||{};
+    if(view.shelf==="fav" && !s.fav) return false;
+    if(!["all","fav"].includes(view.shelf) && s.shelf!==view.shelf) return false;
+    if(view.genre && b.genre!==view.genre) return false;
+    if(q && !`${b.title} ${b.author} ${gname(b.genre)}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const by = {
+    title:(x,y)=>x.title.localeCompare(y.title,"ar"), author:(x,y)=>x.author.localeCompare(y.author,"ar"),
+    year:(x,y)=>(x.year||9999)-(y.year||9999), yearDesc:(x,y)=>(y.year||0)-(x.year||0),
+    rating:(x,y)=>((state[y.id]||{}).rating||0)-((state[x.id]||{}).rating||0),
+    recent:(x,y)=>(y.createdAt||0)-(x.createdAt||0)
+  };
+  return list.sort(by[view.sort]);
+}
+
+function render(){
+  const all = books();
+  const count = k => k==="all"?all.length:k==="fav"?all.filter(b=>(state[b.id]||{}).fav).length:all.filter(b=>(state[b.id]||{}).shelf===k).length;
+  $("tabs").innerHTML = SHELVES.map(s=>`<button class="tab ${view.shelf===s.key?"on":""}" data-shelf="${s.key}">${s.label}<b>${count(s.key)}</b></button>`).join("");
+  const genres = [...new Set(all.map(b=>b.genre).filter(Boolean))];
+  $("genre").innerHTML = `<option value="">كل الأنواع</option>`+genres.map(g=>`<option value="${esc(g)}" ${g===view.genre?"selected":""}>${esc(gname(g))}</option>`).join("");
+  $("heading").textContent = view.shelf==="all" ? "المكتبة" : SHELVES.find(s=>s.key===view.shelf).label;
+  const r = count("reading"), d = count("done");
+  $("sub").textContent = LOADED ? [`${all.length} ${all.length===1?"رواية":"روايات"}`, r?`${r} قيد القراءة`:"", d?`${d} أنهيتها`:""].filter(Boolean).join("  ·  ") : "";
+
+  const lid = store.get("lastRead",null), lb = lid && all.find(b=>b.id===lid), ls = lb && state[lid];
+  $("cont").innerHTML = (lb && lb.fileId && ls && ls.shelf!=="done") ?
+    `<div class="cont" data-cont="${esc(lid)}">${coverHTML(lb)}<div style="min-width:0"><div class="k">أكمل القراءة</div><div class="t" dir="auto">${esc(lb.title)}</div>
+     <div class="p">${ls.page?`صفحة ${ls.page}${lb.pages?` من ${lb.pages}`:""} · `:""}${ls.progress||0}%</div><div class="bar2"><i style="width:${ls.progress||0}%"></i></div></div>
+     <button class="btn primary go">${I.book} تابع</button></div>` : "";
+
+  const list = filtered(), grid = $("grid");
+  const W = grid.clientWidth || 360, mobile = W < 560;
+  const gap = mobile?14:22;
+  const n = Math.max(3, Math.floor((W+gap)/((mobile?96:128)+gap)));
+  const bw = Math.min(150, Math.floor((W-8-gap*(n-1))/n));
+  const tf = bw<100?13:bw<120?15:18;
+  const rows = []; for(let i=0;i<list.length;i+=n) rows.push(list.slice(i,i+n));
+  if(!rows.length) rows.push([]);
+  const msg = !LOADED ? "جارٍ فتح المكتبة…" : all.length ? (view.shelf==="all"?"لا توجد نتائج":"لا توجد روايات هنا بعد") : "لا توجد روايات بعد";
+  grid.innerHTML = `<div style="--bw:${bw}px;--tf:${tf}px">` + rows.map(r=>`<div class="shelf" style="gap:${gap}px">${
+    r.length ? r.map(b=>`<div class="card" data-id="${esc(b.id)}">${coverHTML(b)}</div>`).join("") : `<div class="empty">${I.book}${msg}</div>`
+  }</div><div class="ledge"></div>`).join("") + `</div>`;
+}
+
+function openBook(id){
+  const b = books().find(x=>x.id===id); if(!b) return;
+  const s = st(id), m = $("modal");
+  const canResume = s.page>1 && s.fileId===b.fileId;
+  m.innerHTML = `<button class="iconbtn close" data-close aria-label="إغلاق">${I.close}</button>
+   <div class="mhead">${coverHTML(b)}
+    <div class="mbody"><h3 dir="auto">${esc(b.title)}</h3><div class="by" dir="auto">${esc(b.author)}</div>
+     <div class="chips"><span class="chip">${esc(gname(b.genre))}</span>${b.series?`<span class="chip" dir="auto">${esc(b.series)}</span>`:""}${b.year?`<span class="chip">${b.year}</span>`:""}${b.pages?`<span class="chip">${b.pages} صفحة</span>`:""}</div>
+    </div></div>
+   ${b.summary?`<p class="summary" dir="auto">${esc(b.summary)}</p>`:""}
+   <div class="section">
+     ${b.fileId
+       ? `<div class="row2"><button class="btn primary big" data-read>${I.book} ${canResume?`تابع من صفحة ${s.page}`:"ابدأ القراءة"}</button>
+          </div>`
+       : `<div class="hint" style="font-size:14px">الكتاب الكامل غير متاح بعد.</div>`}
+   </div>
+   <div class="section"><h4>تقييمي</h4><div class="stars">${[1,2,3,4,5].map(i=>`<span data-r="${i}" class="${i<=s.rating?"on":""}">${I.star}</span>`).join("")}</div></div>
+   <div class="section"><h4>رفّي</h4><div class="row2">
+     ${[["want","سأقرأها","bookmark"],["reading","أقرأها","book"],["done","أنهيتها","check"]].map(([k,l,ic])=>`<button class="btn ${s.shelf===k?"on":""}" data-shelfset="${k}">${I[ic]} ${l}</button>`).join("")}
+     <button class="btn ${s.fav?"on":""}" data-fav>${s.fav?I.heartf:I.heart} المفضلة</button>
+   </div></div>
+   <div class="section"><h4>ملاحظاتي</h4><textarea id="notes" dir="auto" rows="3" placeholder="اقتباس أعجبك، فكرة، شخصية…">${esc(s.notes)}</textarea></div>
+`;
+  m.dataset.id = id; delete m.dataset.edit;
+  $("scrim").classList.add("on");
+}
+
+async function loadBook(b){
+  if(!b.fileId) return null;
+  const cached = await files.get(b.fileId); if(cached) return cached;
+  const res = await fetch(b.fileId);
+  if(!res.ok) throw new Error("تعذّر تحميل ملف الكتاب.");
+  const buf = await res.arrayBuffer();
+  const rec = b.fileType==="txt" ? {type:"txt",text:new TextDecoder().decode(buf)} : {type:"pdf",data:buf};
+  files.put(b.fileId,rec);
+  return rec;
+}
+
+// ---- reader (right-to-left page turning) ----
+const R = {id:null,pdf:null,page:1,total:0,zoom:1,type:null,busy:false};
+async function openReader(id){
+  const b = books().find(x=>x.id===id); if(!b) return;
+  const s = st(id);
+  if(s.fileId!==b.fileId){s.fileId=b.fileId;s.page=0;s.scroll=0;s.marks=[]}
+  Object.assign(R,{id,pdf:null,page:Math.max(1,s.page||1),zoom:1});
+  $("rTitle").textContent = b.title;
+  store.set("lastRead",id); save();
+  $("rMarkList").classList.remove("on");
+  $("rStage").innerHTML = '<div class="rload">جارٍ فتح الكتاب…</div>';
+  $("reader").classList.add("on");
+  try{
+    const rec = await loadBook(b); if(!rec) throw new Error("لا يوجد ملف لهذا الكتاب بعد.");
+    R.type = rec.type;
+    if(rec.type==="txt"){
+      $("rNav").style.display="none";
+      $("rStage").innerHTML = `<div class="rtext" id="rText" dir="auto"></div>`;
+      $("rText").textContent = rec.text;
+      requestAnimationFrame(()=>{const el=$("rStage");el.scrollTop=(s.scroll||0)*(el.scrollHeight-el.clientHeight)});
+      return;
+    }
+    $("rNav").style.display="flex";
+    if(!window.pdfjsLib) throw new Error("تعذّر تشغيل قارئ PDF. تأكد من اتصالك.");
+    R.pdf = await pdfjsLib.getDocument({data:new Uint8Array(rec.data.slice(0))}).promise;
+    R.total = R.pdf.numPages;
+    if(R.page>R.total) R.page=1;
+    $("rTotal").textContent = "من "+R.total; $("rNum").max = R.total;
+    await drawPage();
+    if(R.page>1) toast("أهلًا بعودتك — صفحة "+R.page);
+  }catch(e){ $("rStage").innerHTML = `<div class="rload">تعذّر فتح الكتاب<br><small style="font-family:var(--ui);font-size:13px">${esc(errMsg(e))}</small></div>`; }
+}
+async function drawPage(){
+  if(!R.pdf||R.busy) return; R.busy=true;
+  try{
+    const page = await R.pdf.getPage(R.page);
+    const stage = $("rStage"), base = page.getViewport({scale:1});
+    const fit = Math.min((stage.clientWidth-28)/base.width, 3);
+    const vp = page.getViewport({scale:fit*R.zoom});
+    const dpr = window.devicePixelRatio||1;
+    const c = document.createElement("canvas");
+    c.width = Math.floor(vp.width*dpr); c.height = Math.floor(vp.height*dpr);
+    c.style.width = Math.floor(vp.width)+"px"; c.style.height = Math.floor(vp.height)+"px";
+    await page.render({canvasContext:c.getContext("2d"),viewport:vp,transform:dpr!==1?[dpr,0,0,dpr,0,0]:null}).promise;
+    stage.innerHTML=""; stage.appendChild(c); stage.scrollTop=0;
+    $("rNum").value = R.page;
+    $("rMark").classList.toggle("marked",(st(R.id).marks||[]).includes(R.page));
+    $("rPrev").disabled = R.page<=1; $("rNext").disabled = R.page>=R.total;
+    const pct = Math.round(R.page/R.total*100);
+    $("rProg").style.width = pct+"%";
+    const s = st(R.id); s.page=R.page; s.progress=pct;
+    if(R.page>=R.total){ if(s.shelf!=="done"){s.shelf="done";toast("أنهيت الكتاب ✦")} }
+    else if(s.shelf!=="done") s.shelf="reading";
+    save();
+  }finally{R.busy=false}
+}
+function go(n){ if(!R.pdf) return; n=Math.min(Math.max(1,n),R.total); if(n!==R.page){R.page=n;drawPage()} }
+$("rClose").innerHTML=I.close; $("rZoomIn").innerHTML=I.zin; $("rZoomOut").innerHTML=I.zout; $("rMark").innerHTML=I.bookmark; $("rMarks").innerHTML=I.list;
+$("rPrev").innerHTML=I.right; $("rNext").innerHTML=I.left;
+$("rPrev").onclick=()=>go(R.page-1);
+$("rNext").onclick=()=>go(R.page+1);
+$("rNum").onchange=e=>go(+e.target.value||1);
+const txtSize = d => { const t=$("rText"); if(t) t.style.fontSize=Math.min(34,Math.max(14,parseFloat(getComputedStyle(t).fontSize)+d))+"px"; };
+$("rZoomIn").onclick=()=>{ if(R.type==="txt") txtSize(2); else {R.zoom=Math.min(R.zoom+.25,3);drawPage()} };
+$("rZoomOut").onclick=()=>{ if(R.type==="txt") txtSize(-2); else {R.zoom=Math.max(R.zoom-.25,.5);drawPage()} };
+$("rClose").onclick=()=>{ $("reader").classList.remove("on"); R.pdf=null; render(); if($("scrim").classList.contains("on")&&R.id) openBook(R.id); };
+$("rStage").addEventListener("scroll",()=>{
+  if(R.type!=="txt") return; const el=$("rStage"); const f=el.scrollTop/Math.max(1,el.scrollHeight-el.clientHeight);
+  const s=st(R.id); s.scroll=f; s.progress=Math.round(f*100); $("rProg").style.width=s.progress+"%";
+  if(s.progress>=99&&s.shelf!=="done"){s.shelf="done";toast("أنهيت الكتاب ✦")} else if(s.shelf!=="done") s.shelf="reading";
+  clearTimeout(R.t); R.t=setTimeout(save,400);
+});
+let tx0=null;
+$("rStage").addEventListener("touchstart",e=>{if(e.touches.length===1&&R.zoom===1)tx0=e.touches[0].clientX},{passive:true});
+$("rStage").addEventListener("touchend",e=>{if(tx0==null||R.type==="txt")return;const dx=e.changedTouches[0].clientX-tx0;tx0=null;if(Math.abs(dx)>60)go(R.page+(dx>0?1:-1))});
+document.addEventListener("keydown",e=>{if(!$("reader").classList.contains("on"))return;
+  if(e.key==="ArrowLeft")go(R.page+1); if(e.key==="ArrowRight")go(R.page-1);
+  if(e.key==="Escape"){e.stopImmediatePropagation();$("rClose").click()}},true);
+window.addEventListener("resize",()=>{if($("reader").classList.contains("on"))drawPage()});
+function showMarks(){
+  const m=(st(R.id).marks||[]).slice().sort((a,b)=>a-b);
+  $("rMarkList").innerHTML = `<h5>علاماتي</h5>`+(m.length?m.map(p=>`<button data-go="${p}"><span>صفحة ${p}</span><span style="color:var(--muted)">${R.total?Math.round(p/R.total*100)+"%":""}</span></button>`).join(""):`<div class="none">لا توجد علامات بعد. اضغط زر العلامة لحفظ صفحة.</div>`);
+}
+$("rMark").onclick=()=>{
+  if(R.type==="txt"){toast("مكانك يُحفظ تلقائيًا");return}
+  const s=st(R.id); s.marks=s.marks||[]; const i=s.marks.indexOf(R.page);
+  if(i>=0){s.marks.splice(i,1);toast("أُزيلت العلامة")}else{s.marks.push(R.page);toast("حُفظت صفحة "+R.page)}
+  $("rMark").classList.toggle("marked",i<0); save(); if($("rMarkList").classList.contains("on"))showMarks();
+};
+$("rMarks").onclick=()=>{if(R.type==="txt"){toast("مكانك يُحفظ تلقائيًا");return}showMarks();$("rMarkList").classList.toggle("on")};
+$("rMarkList").onclick=e=>{const b=e.target.closest("[data-go]");if(b){go(+b.dataset.go);$("rMarkList").classList.remove("on")}};
+$("rStage").addEventListener("click",()=>$("rMarkList").classList.remove("on"));
+
+function closeModal(){ $("scrim").classList.remove("on"); render(); }
+function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove("on"),2200); }
+
+$("searchBtn").innerHTML = I.search;
+$("searchBtn").onclick = ()=>{ const r=$("searchRow"); r.classList.toggle("on"); if(r.classList.contains("on")) $("q").focus(); else { $("q").value=""; view.q=""; render(); } };
+$("tabs").onclick = e=>{const t=e.target.closest("[data-shelf]");if(t){view.shelf=t.dataset.shelf;render()}};
+$("q").oninput = e=>{view.q=e.target.value;render()};
+$("genre").onchange = e=>{view.genre=e.target.value;render()};
+$("sort").onchange = e=>{view.sort=e.target.value;render()};
+$("grid").onclick = e=>{const c=e.target.closest(".card");if(c)openBook(c.dataset.id)};
+$("cont").onclick = e=>{const c=e.target.closest("[data-cont]");if(c)openReader(c.dataset.cont)};
+$("scrim").onclick = e=>{ if(e.target.id==="scrim") closeModal(); };
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeModal(); });
+
+$("modal").addEventListener("click",e=>{
+  const id = $("modal").dataset.id;
+  if(e.target.closest("[data-close]")) return closeModal();
+  if(!id) return;
+  const s = st(id);
+  if(e.target.closest("[data-read]")) return openReader(id);
+  const r = e.target.closest("[data-r]");
+  if(r){ const v=+r.dataset.r; s.rating=s.rating===v?0:v; save(); openBook(id); return; }
+  const sh = e.target.closest("[data-shelfset]");
+  if(sh){ const k=sh.dataset.shelfset; s.shelf=s.shelf===k?"":k; if(k==="done"&&s.shelf) s.progress=100; save(); openBook(id); toast(s.shelf?"أُضيفت إلى رفّك":"أُزيلت من الرف"); return; }
+  if(e.target.closest("[data-fav]")){ s.fav=!s.fav; save(); openBook(id); return; }
+});
+$("modal").addEventListener("input",e=>{ const id=$("modal").dataset.id; if(id && e.target.id==="notes"){ st(id).notes=e.target.value; save(); } });
+
+render();
+files.init();
+let rsz; window.addEventListener("resize",()=>{clearTimeout(rsz);rsz=setTimeout(render,150)});
+(async()=>{
+  try{
+    const res = await fetch("books.json",{cache:"no-cache"});
+    if(!res.ok) throw 0;
+    BOOKS = (await res.json()).map((b,i,a)=>({...b,fileId:b.file||null,fileType:b.file&&/\.txt$/i.test(b.file)?"txt":"pdf",createdAt:a.length-i}));
+  }catch(e){ BOOKS = FALLBACK.map((b,i,a)=>({...b,createdAt:a.length-i})); }
+  LOADED = true; render();
+})();
+if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+</script>
+</body>
+</html>
