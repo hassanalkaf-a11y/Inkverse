@@ -147,7 +147,10 @@ textarea:focus,.field input:focus{outline:none;border-color:var(--gold)}
 .rbtn.marked{background:var(--gold);color:#000;border-color:var(--gold)}
 .rprog{height:1px;background:var(--line)}.rprog i{display:block;height:100%;background:var(--gold);transition:width .2s}
 .rstage{flex:1;overflow:auto;display:flex;justify-content:center;align-items:flex-start;padding:14px}
-.rstage canvas{background:#fff;box-shadow:0 0 0 1px #1a1a1a,0 20px 50px rgba(0,0,0,.8)}
+.pcol{display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px 0 60px;width:max-content;min-width:100%}
+.pslot{position:relative;background:#f3efe6;box-shadow:0 0 0 1px #1a1a1a,0 12px 30px rgba(0,0,0,.7)}
+.pslot span{position:absolute;inset:0;display:grid;place-items:center;color:#bbb;font-size:13px}
+.pslot canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .rtext{max-width:640px;width:100%;padding:24px 18px 60px;font-family:var(--display);font-size:21px;line-height:2;white-space:pre-wrap;word-wrap:break-word;color:#e3dbcc}
 .rnav{padding-bottom:calc(10px + env(safe-area-inset-bottom))!important;display:flex;align-items:center;gap:10px;padding:10px;border-top:1px solid var(--line)}
 .rnav .rbtn{flex:1;height:46px;width:auto}
@@ -431,69 +434,87 @@ async function openReader(id){
     const rec = await loadBook(b); if(!rec) throw new Error("لا يوجد ملف لهذا الكتاب بعد.");
     R.type = rec.type;
     if(rec.type==="txt"){
-      $("rNav").style.display="none";
+      $("rNav").style.display="none"; $("rStage").style.display="flex";
       $("rStage").innerHTML = `<div class="rtext" id="rText" dir="auto"></div>`;
       $("rText").textContent = rec.text;
       requestAnimationFrame(()=>{const el=$("rStage");el.scrollTop=(s.scroll||0)*(el.scrollHeight-el.clientHeight)});
       return;
     }
-    $("rNav").style.display="flex";
+    $("rNav").style.display="flex"; R.slots=[];
     await loadPdfJs();
     R.pdf = await pdfjsLib.getDocument({data:new Uint8Array(rec.data.slice(0))}).promise;
     R.total = R.pdf.numPages;
     if(R.page>R.total) R.page=1;
     $("rTotal").textContent = "من "+R.total; $("rNum").max = R.total;
-    await drawPage();
+    await setupScroll();
     if(R.page>1) toast("أهلًا بعودتك — صفحة "+R.page);
   }catch(e){ $("rStage").innerHTML = `<div class="rload">تعذّر فتح الكتاب<br><small style="font-family:var(--ui);font-size:13px">${esc(errMsg(e))}</small></div>`; }
 }
-async function drawPage(){
-  if(!R.pdf||R.busy) return; R.busy=true;
-  try{
-    const page = await R.pdf.getPage(R.page);
-    const stage = $("rStage"), base = page.getViewport({scale:1});
-    const fit = Math.min((stage.clientWidth-28)/base.width, 3);
-    const vp = page.getViewport({scale:fit*R.zoom});
-    const dpr = window.devicePixelRatio||1;
-    const c = document.createElement("canvas");
-    c.width = Math.floor(vp.width*dpr); c.height = Math.floor(vp.height*dpr);
-    c.style.width = Math.floor(vp.width)+"px"; c.style.height = Math.floor(vp.height)+"px";
-    await page.render({canvasContext:c.getContext("2d"),viewport:vp,transform:dpr!==1?[dpr,0,0,dpr,0,0]:null}).promise;
-    stage.innerHTML=""; stage.appendChild(c); stage.scrollTop=0;
-    $("rNum").value = R.page;
-    $("rMark").classList.toggle("marked",(st(R.id).marks||[]).includes(R.page));
-    $("rPrev").disabled = R.page<=1; $("rNext").disabled = R.page>=R.total;
-    const pct = Math.round(R.page/R.total*100);
-    $("rProg").style.width = pct+"%";
-    const s = st(R.id); s.page=R.page; s.progress=pct;
-    if(R.page>=R.total){ if(s.shelf!=="done"){s.shelf="done";toast("أنهيت الكتاب ✦")} }
-    else if(s.shelf!=="done") s.shelf="reading";
-    save();
-  }finally{R.busy=false}
+// ---- continuous vertical scrolling through the pages ----
+const GAP = 10, PAD = 12;
+function slotH(){ return R.w*R.base.height/R.base.width; }
+async function setupScroll(){
+  const stage=$("rStage"); stage.innerHTML=""; stage.style.display="block";
+  const p1=await R.pdf.getPage(1); R.base=p1.getViewport({scale:1});
+  const col=document.createElement("div"); col.className="pcol"; stage.appendChild(col);
+  R.slots=[]; for(let i=1;i<=R.total;i++){ const d=document.createElement("div"); d.className="pslot"; d.dataset.p=i; d.innerHTML=`<span>${i}</span>`; col.appendChild(d); R.slots.push(d); }
+  layoutSlots(); scrollToPage(R.page); renderAround();
+  stage.onscroll=()=>{ if(R.raf) return; R.raf=requestAnimationFrame(()=>{ R.raf=0; onScrollPdf(); }); };
+  updatePageUI();
 }
-function go(n){ if(!R.pdf) return; n=Math.min(Math.max(1,n),R.total); if(n!==R.page){R.page=n;drawPage()} }
+function layoutSlots(){
+  const stage=$("rStage"); R.w=Math.floor(Math.min(stage.clientWidth-20,860)*R.zoom);
+  const h=slotH();
+  R.slots.forEach(s=>{ s.style.width=R.w+"px"; s.style.height=h+"px"; if(s.dataset.w && +s.dataset.w!==R.w){ s.dataset.w=""; const c=s.querySelector("canvas"); if(c) c.remove(); } });
+}
+function currentPage(){ const st=$("rStage"); return Math.min(R.total,Math.max(1,Math.floor((st.scrollTop+st.clientHeight*.35-PAD)/(slotH()+GAP))+1)); }
+function scrollToPage(p){ $("rStage").scrollTop = PAD + (p-1)*(slotH()+GAP); }
+async function renderSlot(p){
+  const s=R.slots[p-1]; if(!s || +s.dataset.w===R.w) return; s.dataset.w=R.w; const w=R.w;
+  try{
+    const page=await R.pdf.getPage(p); if(+s.dataset.w!==w) return;
+    const dpr=Math.min(window.devicePixelRatio||1,2), vp=page.getViewport({scale:w/page.getViewport({scale:1}).width});
+    const c=document.createElement("canvas"); c.width=Math.floor(vp.width*dpr); c.height=Math.floor(vp.height*dpr);
+    await page.render({canvasContext:c.getContext("2d"),viewport:vp,transform:dpr!==1?[dpr,0,0,dpr,0,0]:null}).promise;
+    if(+s.dataset.w!==w) return; const old=s.querySelector("canvas"); if(old) old.remove(); s.appendChild(c);
+  }catch(e){ s.dataset.w=""; }
+}
+function renderAround(){
+  const cur=currentPage();
+  for(let p=cur-2;p<=cur+3;p++) if(p>=1&&p<=R.total) renderSlot(p);
+  R.slots.forEach((s,i)=>{ if(Math.abs(i+1-cur)>8 && s.dataset.w){ s.dataset.w=""; const c=s.querySelector("canvas"); if(c) c.remove(); } });
+}
+function updatePageUI(){
+  $("rNum").value=R.page;
+  $("rMark").classList.toggle("marked",(st(R.id).marks||[]).includes(R.page));
+  $("rPrev").disabled=R.page<=1; $("rNext").disabled=R.page>=R.total;
+  const pct=Math.round(R.page/R.total*100); $("rProg").style.width=pct+"%";
+  const s=st(R.id); s.page=R.page; s.progress=pct;
+  if(R.page>=R.total){ if(s.shelf!=="done"){s.shelf="done";toast("أنهيت الكتاب ✦")} } else if(s.shelf!=="done") s.shelf="reading";
+  clearTimeout(R.sv); R.sv=setTimeout(save,500);
+}
+function onScrollPdf(){ if(!R.pdf) return; renderAround(); const p=currentPage(); if(p!==R.page){ R.page=p; updatePageUI(); } }
+function go(n){ if(!R.pdf) return; n=Math.min(Math.max(1,n),R.total); R.page=n; scrollToPage(n); renderAround(); updatePageUI(); }
+function rezoom(z){ const keep=R.page; R.zoom=z; layoutSlots(); scrollToPage(keep); renderAround(); }
 $("rClose").innerHTML=I.close; $("rZoomIn").innerHTML=I.zin; $("rZoomOut").innerHTML=I.zout; $("rMark").innerHTML=I.bookmark; $("rMarks").innerHTML=I.list;
 $("rPrev").innerHTML=I.right; $("rNext").innerHTML=I.left;
 $("rPrev").onclick=()=>go(R.page-1);
 $("rNext").onclick=()=>go(R.page+1);
 $("rNum").onchange=e=>go(+e.target.value||1);
 const txtSize = d => { const t=$("rText"); if(t) t.style.fontSize=Math.min(34,Math.max(14,parseFloat(getComputedStyle(t).fontSize)+d))+"px"; };
-$("rZoomIn").onclick=()=>{ if(R.type==="txt") txtSize(2); else {R.zoom=Math.min(R.zoom+.25,3);drawPage()} };
-$("rZoomOut").onclick=()=>{ if(R.type==="txt") txtSize(-2); else {R.zoom=Math.max(R.zoom-.25,.5);drawPage()} };
-$("rClose").onclick=()=>{ $("reader").classList.remove("on"); R.pdf=null; render(); if($("scrim").classList.contains("on")&&R.id) openBook(R.id); };
+$("rZoomIn").onclick=()=>{ if(R.type==="txt") txtSize(2); else if(R.pdf) rezoom(Math.min(R.zoom+.25,3)); };
+$("rZoomOut").onclick=()=>{ if(R.type==="txt") txtSize(-2); else if(R.pdf) rezoom(Math.max(R.zoom-.25,.5)); };
+$("rClose").onclick=()=>{ $("reader").classList.remove("on"); R.pdf=null; $("rStage").onscroll=null; save(); render(); if($("scrim").classList.contains("on")&&R.id) openBook(R.id); };
 $("rStage").addEventListener("scroll",()=>{
   if(R.type!=="txt") return; const el=$("rStage"); const f=el.scrollTop/Math.max(1,el.scrollHeight-el.clientHeight);
   const s=st(R.id); s.scroll=f; s.progress=Math.round(f*100); $("rProg").style.width=s.progress+"%";
   if(s.progress>=99&&s.shelf!=="done"){s.shelf="done";toast("أنهيت الكتاب ✦")} else if(s.shelf!=="done") s.shelf="reading";
   clearTimeout(R.t); R.t=setTimeout(save,400);
 });
-let tx0=null;
-$("rStage").addEventListener("touchstart",e=>{if(e.touches.length===1&&R.zoom===1)tx0=e.touches[0].clientX},{passive:true});
-$("rStage").addEventListener("touchend",e=>{if(tx0==null||R.type==="txt")return;const dx=e.changedTouches[0].clientX-tx0;tx0=null;if(Math.abs(dx)>60)go(R.page+(dx>0?1:-1))});
 document.addEventListener("keydown",e=>{if(!$("reader").classList.contains("on"))return;
-  if(e.key==="ArrowLeft")go(R.page+1); if(e.key==="ArrowRight")go(R.page-1);
+  if(e.key==="ArrowLeft"||e.key==="PageDown")go(R.page+1); if(e.key==="ArrowRight"||e.key==="PageUp")go(R.page-1);
   if(e.key==="Escape"){e.stopImmediatePropagation();$("rClose").click()}},true);
-window.addEventListener("resize",()=>{if($("reader").classList.contains("on"))drawPage()});
+window.addEventListener("resize",()=>{ if($("reader").classList.contains("on")&&R.pdf) rezoom(R.zoom); });
 function showMarks(){
   const m=(st(R.id).marks||[]).slice().sort((a,b)=>a-b);
   $("rMarkList").innerHTML = `<h5>علاماتي</h5>`+(m.length?m.map(p=>`<button data-go="${p}"><span>صفحة ${p}</span><span style="color:var(--muted)">${R.total?Math.round(p/R.total*100)+"%":""}</span></button>`).join(""):`<div class="none">لا توجد علامات بعد. اضغط زر العلامة لحفظ صفحة.</div>`);
