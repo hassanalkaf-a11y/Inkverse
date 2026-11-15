@@ -539,7 +539,12 @@ let rsz; window.addEventListener("resize",()=>{clearTimeout(rsz);rsz=setTimeout(
   }catch(e){ BOOKS = FALLBACK.map((b,i,a)=>({...b,createdAt:a.length-i})); }
   LOADED = true; render();
 })();
-if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+if("serviceWorker" in navigator){
+  let reloaded=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(reloaded) return; reloaded=true; location.reload(); });
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{}); });
+}
 </script>
 </body>
 </html>
