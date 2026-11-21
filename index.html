@@ -32,7 +32,7 @@ button{font:inherit;color:inherit}
 .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
 
 /* header */
-header{padding-top:env(safe-area-inset-top);position:sticky;top:0;z-index:5;background:rgba(0,0,0,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+body>header{padding-top:env(safe-area-inset-top);position:sticky;top:0;z-index:5;background:rgba(0,0,0,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .top{display:flex;align-items:center;gap:10px;height:64px}
 .brand{display:flex;align-items:center;gap:10px;margin-left:auto}
 .brand img{width:34px;height:34px;border-radius:9px;border:1px solid var(--line2)}
@@ -431,7 +431,7 @@ function loadPdfJs(){ if(window.pdfjsLib) return Promise.resolve();
 
 // ---- story typesetting: blank line = new paragraph, "# " = chapter heading, "***" = scene break ----
 function renderStory(el, b, text){
-  const head = document.createElement("header"); head.className="sthead";
+  const head = document.createElement("div"); head.className="sthead";
   if(b.cover){ const im=document.createElement("img"); im.src=b.cover; im.alt=""; im.className="stcover"; head.appendChild(im); }
   const t = document.createElement("h1"); t.dir="auto"; t.textContent = b.title; head.appendChild(t);
   const m = document.createElement("div"); m.className="stmeta"; m.textContent = [b.author, b.tag||gname(b.genre), b.minutes?`${minsAr(b.minutes)} قراءة`:""].filter(Boolean).join("  ·  "); head.appendChild(m);
