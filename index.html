@@ -156,6 +156,7 @@ textarea:focus,.field input:focus{outline:none;border-color:var(--gold)}
 .rtext p[dir="ltr"]{font-family:"Cormorant Garamond",Georgia,serif;line-height:1.75;font-size:1.08em}
 .rtext h2{font-size:1.25em;color:var(--gold2);text-align:center;margin:2.2em 0 1.2em;font-weight:700}
 .sthead{text-align:center;margin:10px 0 2.4em;padding-bottom:1.6em;border-bottom:1px solid var(--line2)}
+.stcover{display:block;width:100%;max-width:420px;margin:0 auto 1.4em;border-radius:6px;box-shadow:0 0 0 1px var(--line2),0 20px 50px rgba(0,0,0,.8)}
 .sthead h1{font-size:1.9em;line-height:1.3;margin:0 0 .3em;color:var(--gold2)}
 .stmeta{font-family:var(--ui);font-size:13px;color:var(--muted)}
 .stbreak,.stend{text-align:center;color:var(--gold);margin:1.6em 0;letter-spacing:.2em}
@@ -271,6 +272,7 @@ I.list='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const ORN_SVG={"Romance": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z\"/><path d=\"M12 7.4V20\"/></svg>", "Adventure": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"5\" r=\"2\"/><path d=\"M12 7v13M8 10h8M5 13c0 4 3 7 7 7s7-3 7-7\"/></svg>", "Gothic": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M15 4a8 8 0 1 0 5 13A7 7 0 0 1 15 4z\"/><path d=\"M19 3.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z\"/></svg>", "Literary": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 3.5C12 4 7 9 5 19.5\"/><path d=\"M20 3.5c-1 5-4 8-9 9.5l2-3c-2 .5-4 2-5.5 4.5\"/></svg>", "Historical": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 18.5h16M5 18.5L4 8l5 4 3-6 3 6 5-4-1 10.5z\"/><circle cx=\"12\" cy=\"6\" r=\".8\"/></svg>", "Science Fiction": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"5\"/><ellipse cx=\"12\" cy=\"12\" rx=\"10.5\" ry=\"3.5\" transform=\"rotate(-20 12 12)\"/></svg>", "Horror": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z\"/><circle cx=\"12\" cy=\"12\" r=\"3.2\"/><path d=\"M12 2v2M5 4l1.2 1.6M19 4l-1.2 1.6M12 20v2\"/></svg>", "Mystery": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"10\" cy=\"10\" r=\"6\"/><path d=\"M14.5 14.5L20 20\"/><path d=\"M10 7v.01M10 9.5V13\"/></svg>", "Fantasy": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z\"/><path d=\"M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z\"/></svg>", "_": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 3l9 9-9 9-9-9z\"/><path d=\"M12 8l4 4-4 4-4-4z\"/></svg>"};
 const FALLBACK = [];
 const GENRES = {"Horror":"رعب","Mystery":"غموض","Fantasy":"فانتازيا","Science Fiction":"خيال علمي","Fiction":"قصة","Romance":"رومانسية","Adventure":"مغامرة","Historical":"تاريخية","Literary":"أدبية","Detective":"بوليسية","Drama":"دراما","Thriller":"تشويق"};
+const minsAr = m => m===1?"دقيقة واحدة":m===2?"دقيقتان":(m>=3&&m<=10)?`${m} دقائق`:`${m} دقيقة`;
 const gname = g => GENRES[g] || g || "قصة";
 const SHELVES = [{key:"all",label:"الكل"},{key:"reading",label:"أقرأها"},{key:"want",label:"سأقرأها"},{key:"done",label:"أنهيتها"},{key:"fav",label:"المفضلة"}];
 const TINTS = ["#151515","#0f1311","#141010","#0f1016","#13110d","#0c0c0c","#120f13"];
@@ -322,11 +324,11 @@ async function ensureCover(b){
 function coverHTML(b){
   const tint = TINTS[hash(b.title)%TINTS.length];
   const s = state[b.id]||{};
-  const img = b.fileId && COVERS.get(b.fileId);
+  const img = b.cover || (b.fileId && COVERS.get(b.fileId));
   if(!img) setTimeout(()=>ensureCover(b),0);
   const badge = s.shelf==="reading" ? `<span class="badge">${s.progress||0}%</span><div class="pb"><i style="width:${s.progress||0}%"></i></div>`
               : s.shelf==="done" ? `<span class="badge">${I.check}</span>` : "";
-  if(img) return `<div class="cover img" style="background:#111 url('${img}') center/cover no-repeat">${s.fav?`<span class="fav"></span>`:""}${badge}</div>`;
+  if(img) return `<div class="cover img" style="background:#111 url('${encodeURI(img)}') center/cover no-repeat">${s.fav?`<span class="fav"></span>`:""}${badge}</div>`;
   return `<div class="cover" style="background:radial-gradient(ellipse at 70% 15%,rgba(255,255,255,.05),transparent 55%),linear-gradient(165deg,${tint},#030303)">
     ${s.fav?`<span class="fav"></span>`:""}${badge}${b.fileId?`<span class="pdfdot"></span>`:""}
     <div class="orn">${ORN_SVG[b.genre]||ORN_SVG._}</div>
@@ -389,7 +391,7 @@ function openBook(id){
   m.innerHTML = `<button class="iconbtn close" data-close aria-label="إغلاق">${I.close}</button>
    <div class="mhead">${coverHTML(b)}
     <div class="mbody"><h3 dir="auto">${esc(b.title)}</h3>${b.author?`<div class="by" dir="auto">${esc(b.author)}</div>`:""}
-     <div class="chips"><span class="chip">${esc(gname(b.genre))}</span>${b.series?`<span class="chip" dir="auto">${esc(b.series)}</span>`:""}${b.year?`<span class="chip">${b.year}</span>`:""}${b.minutes?`<span class="chip">${b.minutes} ${b.minutes<=10&&b.minutes>2?"دقائق":"دقيقة"} قراءة</span>`:""}${b.pages?`<span class="chip">${b.pages} صفحة</span>`:""}</div>
+     <div class="chips"><span class="chip">${esc(gname(b.genre))}</span>${b.series?`<span class="chip" dir="auto">${esc(b.series)}</span>`:""}${b.year?`<span class="chip">${b.year}</span>`:""}${b.minutes?`<span class="chip">${minsAr(b.minutes)} قراءة</span>`:""}${b.pages?`<span class="chip">${b.pages} صفحة</span>`:""}</div>
     </div></div>
    ${b.summary?`<p class="summary" dir="auto">${esc(b.summary)}</p>`:""}
    <div class="section">
@@ -430,8 +432,9 @@ function loadPdfJs(){ if(window.pdfjsLib) return Promise.resolve();
 // ---- story typesetting: blank line = new paragraph, "# " = chapter heading, "***" = scene break ----
 function renderStory(el, b, text){
   const head = document.createElement("header"); head.className="sthead";
+  if(b.cover){ const im=document.createElement("img"); im.src=b.cover; im.alt=""; im.className="stcover"; head.appendChild(im); }
   const t = document.createElement("h1"); t.dir="auto"; t.textContent = b.title; head.appendChild(t);
-  const m = document.createElement("div"); m.className="stmeta"; m.textContent = [b.tag||gname(b.genre), b.minutes?`${b.minutes} دقيقة قراءة`:""].filter(Boolean).join("  ·  "); head.appendChild(m);
+  const m = document.createElement("div"); m.className="stmeta"; m.textContent = [b.author, b.tag||gname(b.genre), b.minutes?`${minsAr(b.minutes)} قراءة`:""].filter(Boolean).join("  ·  "); head.appendChild(m);
   el.appendChild(head);
   String(text).replace(/\r\n?/g,"\n").split(/\n\s*\n/).forEach(block=>{
     const s = block.trim(); if(!s) return;
