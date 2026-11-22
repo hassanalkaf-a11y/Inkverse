@@ -1,5 +1,15 @@
 [
  {
+  "id": "maataf-mulattakh",
+  "title": "معطف ملطخ",
+  "genre": "Detective",
+  "tag": "قصة قصيرة",
+  "year": 2026,
+  "minutes": 2,
+  "cover": "stories/maataf-mulattakh.jpg",
+  "file": "stories/maataf-mulattakh.txt"
+ },
+ {
   "id": "al-laylah-dhatuha",
   "title": "الليله ذاتَها…",
   "genre": "Horror",
@@ -7,6 +17,7 @@
   "year": 2026,
   "minutes": 2,
   "cover": "stories/al-laylah-dhatuha.jpg",
-  "file": "stories/al-laylah-dhatuha.txt"
+  "file": "stories/al-laylah-dhatuha.txt",
+  "coverInvert": true
  }
 ]
