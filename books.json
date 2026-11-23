@@ -1,5 +1,15 @@
 [
  {
+  "id": "tawqeet-sayyi",
+  "title": "توقيتٌ سيّئ",
+  "genre": "Science Fiction",
+  "tag": "قصة قصيرة",
+  "year": 2026,
+  "minutes": 2,
+  "cover": "stories/tawqeet-sayyi.jpg",
+  "file": "stories/tawqeet-sayyi.txt"
+ },
+ {
   "id": "qitat-jareeda",
   "title": "قطعة جريدة",
   "genre": "Mystery",
