@@ -415,11 +415,15 @@ function openBook(id){
 
 async function loadBook(b){
   if(!b.fileId) return null;
-  const cached = await files.get(b.fileId); if(cached) return cached;
-  const res = await fetch(b.fileId);
-  if(!res.ok) throw new Error(res.status===404?"القصة غير متاحة بعد.":"تعذّر تحميل القصة.");
+  const isTxt = b.fileType==="txt";
+  // stories (text) always come fresh from the site so edits show up; the saved copy is only for offline
+  if(!isTxt){ const cached = await files.get(b.fileId); if(cached) return cached; }
+  let res;
+  try{ res = await fetch(b.fileId,{cache:"no-cache"}); }
+  catch(e){ const cached = await files.get(b.fileId); if(cached) return cached; throw new Error("لا يوجد اتصال بالإنترنت."); }
+  if(!res.ok){ const cached = await files.get(b.fileId); if(cached) return cached; throw new Error(res.status===404?"القصة غير متاحة بعد.":"تعذّر تحميل القصة."); }
   const buf = await res.arrayBuffer();
-  const rec = b.fileType==="txt" ? {type:"txt",text:new TextDecoder().decode(buf)} : {type:"pdf",data:buf};
+  const rec = isTxt ? {type:"txt",text:new TextDecoder().decode(buf)} : {type:"pdf",data:buf};
   files.put(b.fileId,rec);
   return rec;
 }
