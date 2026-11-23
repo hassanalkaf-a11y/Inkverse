@@ -160,6 +160,7 @@ textarea:focus,.field input:focus{outline:none;border-color:var(--gold)}
 .stcover.inv{width:72%;max-width:300px;filter:invert(1) sepia(.45) saturate(.9) brightness(.82)}
 .sthead h1{font-size:1.9em;line-height:1.3;margin:0 0 .3em;color:var(--gold2)}
 .stmeta{font-family:var(--ui);font-size:13px;color:var(--muted)}
+.rtext p.stclue{text-align:center;direction:ltr;font-family:"Cormorant Garamond",Georgia,serif;color:var(--gold2);letter-spacing:.06em;font-size:1.05em;margin:1.2em 0 1.4em}
 .stbreak,.stend{text-align:center;color:var(--gold);margin:1.6em 0;letter-spacing:.2em}
 .stend{font-size:15px;margin-top:3em;color:var(--muted)}
 .rnav{padding-bottom:calc(10px + env(safe-area-inset-bottom))!important;display:flex;align-items:center;gap:10px;padding:10px;border-top:1px solid var(--line)}
@@ -443,6 +444,8 @@ function renderStory(el, b, text){
     if(/^#{1,3}\s/.test(s)){ node=document.createElement("h2"); node.textContent=s.replace(/^#+\s*/,""); }
     else if(/^(\*\s*){3,}$|^[-—]{3,}$|^✦$/.test(s)){ node=document.createElement("div"); node.className="stbreak"; node.textContent="✦"; }
     else { node=document.createElement("p"); node.textContent=s.replace(/\n/g," "); }
+    // short lines written in Latin letters (a clue, a word puzzle) stand out centered in gold
+    if(node.tagName==="P" && s.length<70 && /[A-Za-z]/.test(s) && !/[\u0600-\u06FF]/.test(s.replace(/[،؛؟]/g,""))) node.className="stclue";
     node.dir="auto"; el.appendChild(node);
   });
   const end=document.createElement("div"); end.className="stend"; end.textContent="✦  النهاية  ✦"; el.appendChild(end);
