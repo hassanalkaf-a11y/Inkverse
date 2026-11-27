@@ -407,7 +407,7 @@ function openBook(id){
      ${[["want","سأقرأها","bookmark"],["reading","أقرأها","book"],["done","أنهيتها","check"]].map(([k,l,ic])=>`<button class="btn ${s.shelf===k?"on":""}" data-shelfset="${k}">${I[ic]} ${l}</button>`).join("")}
      <button class="btn ${s.fav?"on":""}" data-fav>${s.fav?I.heartf:I.heart} المفضلة</button>
    </div></div>
-   <div class="section"><h4>ملاحظاتك للكاتب</h4><textarea id="notes" dir="auto" rows="3" placeholder="سطر أعجبك، فكرة، شخصية، اقتراح…">${esc(s.notes)}</textarea><div class="hint">ملاحظاتك تصل للكاتب تلقائيًا لتحسين القصص.</div></div>
+   <div class="section"><h4>ملاحظاتك للكاتب</h4><textarea id="notes" dir="auto" rows="3" placeholder="سطر أعجبك، فكرة، شخصية، اقتراح…">${esc(s.notes)}</textarea><div class="hint">ملاحظاتك وتقييمك يصلون للكاتب تلقائيًا لتحسين القصص.</div></div>
 `;
   m.dataset.id = id; delete m.dataset.edit;
   $("scrim").classList.add("on");
@@ -571,15 +571,19 @@ $("rStage").addEventListener("click",()=>$("rMarkList").classList.remove("on"));
 const NOTES_URL = "https://formspree.io/f/mljbkgjo";
 function sendNote(id){
   const s = state[id]; if(!s) return;
-  const note = (s.notes||"").trim();
-  if(!note || note===s.sentNote) return;
-  const b = books().find(x=>x.id===id);
-  s.sentNote = note; save();
+  const note = (s.notes||"").trim(), rating = s.rating||0;
+  if(!note && !rating) return;
+  const key = rating+"|"+note;
+  if(key===s.sentKey) return;
+  const b = books().find(x=>x.id===id), title = b?b.title:id;
+  const stars = rating ? "★".repeat(rating)+"☆".repeat(5-rating)+" ("+rating+"/5)" : "بدون تقييم";
+  s.sentKey = key; save();
+  const fail = ()=>{ s.sentKey=""; save(); };
   try{
     fetch(NOTES_URL,{method:"POST",keepalive:true,headers:{"Content-Type":"application/json","Accept":"application/json"},
-      body:JSON.stringify({"القصة":b?b.title:id,"الملاحظة":note,_subject:"ملاحظة جديدة على «"+(b?b.title:id)+"»"})})
-      .then(r=>{ if(!r.ok){ s.sentNote=""; save(); } }).catch(()=>{ s.sentNote=""; save(); });
-  }catch(e){ s.sentNote=""; save(); }
+      body:JSON.stringify({"القصة":title,"التقييم":stars,"الملاحظة":note||"—",_subject:(note?"ملاحظة جديدة":"تقييم جديد")+" على «"+title+"» "+(rating?rating+"★":"")})})
+      .then(r=>{ if(!r.ok) fail(); }).catch(fail);
+  }catch(e){ fail(); }
 }
 function closeModal(){ const oid=$("modal").dataset.id; if(oid) sendNote(oid); $("scrim").classList.remove("on"); render(); }
 function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove("on"),2200); }
