@@ -462,6 +462,7 @@ async function openReader(id){
   if(s.fileId!==b.fileId){s.fileId=b.fileId;s.page=0;s.scroll=0;s.marks=[]}
   Object.assign(R,{id,pdf:null,page:Math.max(1,s.page||1),zoom:1});
   $("rTitle").textContent = b.title;
+  try{ if(window.goatcounter && goatcounter.count) goatcounter.count({path:"/قصة/"+b.title, title:b.title, event:true}); }catch(e){}
   store.set("lastRead",id); save();
   $("rMarkList").classList.remove("on");
   $("rStage").innerHTML = '<div class="rload">جارٍ فتح الكتاب…</div>';
@@ -623,5 +624,6 @@ if("serviceWorker" in navigator){
   document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{}); });
 }
 </script>
+<script data-goatcounter="https://inkverse.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
