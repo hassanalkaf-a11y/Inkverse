@@ -407,7 +407,7 @@ function openBook(id){
      ${[["want","سأقرأها","bookmark"],["reading","أقرأها","book"],["done","أنهيتها","check"]].map(([k,l,ic])=>`<button class="btn ${s.shelf===k?"on":""}" data-shelfset="${k}">${I[ic]} ${l}</button>`).join("")}
      <button class="btn ${s.fav?"on":""}" data-fav>${s.fav?I.heartf:I.heart} المفضلة</button>
    </div></div>
-   <div class="section"><h4>ملاحظاتي</h4><textarea id="notes" dir="auto" rows="3" placeholder="سطر أعجبك، فكرة، شخصية…">${esc(s.notes)}</textarea></div>
+   <div class="section"><h4>ملاحظاتك للكاتب</h4><textarea id="notes" dir="auto" rows="3" placeholder="سطر أعجبك، فكرة، شخصية، اقتراح…">${esc(s.notes)}</textarea><div class="hint">ملاحظاتك تصل للكاتب تلقائيًا لتحسين القصص.</div></div>
 `;
   m.dataset.id = id; delete m.dataset.edit;
   $("scrim").classList.add("on");
@@ -566,7 +566,22 @@ $("rMarks").onclick=()=>{if(R.type==="txt"){toast("مكانك يُحفظ تلق�
 $("rMarkList").onclick=e=>{const b=e.target.closest("[data-go]");if(b){go(+b.dataset.go);$("rMarkList").classList.remove("on")}};
 $("rStage").addEventListener("click",()=>$("rMarkList").classList.remove("on"));
 
-function closeModal(){ $("scrim").classList.remove("on"); render(); }
+
+// ---- notes reach the writer (readers are told under the box) ----
+const NOTES_URL = "https://formspree.io/f/mljbkgjo";
+function sendNote(id){
+  const s = state[id]; if(!s) return;
+  const note = (s.notes||"").trim();
+  if(!note || note===s.sentNote) return;
+  const b = books().find(x=>x.id===id);
+  s.sentNote = note; save();
+  try{
+    fetch(NOTES_URL,{method:"POST",keepalive:true,headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify({"القصة":b?b.title:id,"الملاحظة":note,_subject:"ملاحظة جديدة على «"+(b?b.title:id)+"»"})})
+      .then(r=>{ if(!r.ok){ s.sentNote=""; save(); } }).catch(()=>{ s.sentNote=""; save(); });
+  }catch(e){ s.sentNote=""; save(); }
+}
+function closeModal(){ const oid=$("modal").dataset.id; if(oid) sendNote(oid); $("scrim").classList.remove("on"); render(); }
 function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove("on"),2200); }
 
 $("searchBtn").innerHTML = I.search;
@@ -593,6 +608,8 @@ $("modal").addEventListener("click",e=>{
   if(e.target.closest("[data-fav]")){ s.fav=!s.fav; save(); openBook(id); return; }
 });
 $("modal").addEventListener("input",e=>{ const id=$("modal").dataset.id; if(id && e.target.id==="notes"){ st(id).notes=e.target.value; save(); } });
+$("modal").addEventListener("focusout",e=>{ const id=$("modal").dataset.id; if(id && e.target.id==="notes") sendNote(id); });
+document.addEventListener("visibilitychange",()=>{ const id=$("modal").dataset.id; if(document.visibilityState==="hidden" && id) sendNote(id); });
 
 // ---- splash screen ----
 (()=>{ const sp=$("splash"); if(!sp) return;
