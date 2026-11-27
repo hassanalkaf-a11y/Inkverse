@@ -407,7 +407,7 @@ function openBook(id){
      ${[["want","سأقرأها","bookmark"],["reading","أقرأها","book"],["done","أنهيتها","check"]].map(([k,l,ic])=>`<button class="btn ${s.shelf===k?"on":""}" data-shelfset="${k}">${I[ic]} ${l}</button>`).join("")}
      <button class="btn ${s.fav?"on":""}" data-fav>${s.fav?I.heartf:I.heart} المفضلة</button>
    </div></div>
-   <div class="section"><h4>ملاحظاتك للكاتب</h4><textarea id="notes" dir="auto" rows="3" placeholder="سطر أعجبك، فكرة، شخصية، اقتراح…">${esc(s.notes)}</textarea><div class="hint">ملاحظاتك وتقييمك يصلون للكاتب تلقائيًا لتحسين القصص.</div></div>
+   <div class="section"><h4>ملاحظاتك للكاتب</h4><textarea id="notes" dir="auto" rows="3" placeholder="سطر أعجبك، فكرة، شخصية، اقتراح…">${esc(s.notes)}</textarea><div class="hint">ملاحظاتك وتقييمك يصلون للكاتب تلقائيًا مع نوع جهازك، لتحسين القصص.</div></div>
 `;
   m.dataset.id = id; delete m.dataset.edit;
   $("scrim").classList.add("on");
@@ -577,11 +577,14 @@ function sendNote(id){
   if(key===s.sentKey) return;
   const b = books().find(x=>x.id===id), title = b?b.title:id;
   const stars = rating ? "★".repeat(rating)+"☆".repeat(5-rating)+" ("+rating+"/5)" : "بدون تقييم";
+  const ua = navigator.userAgent;
+  const os = /iPad/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1) ? "iPad" : /iPhone/.test(ua) ? "iPhone" : /Android/.test(ua) ? "Android" : /Windows/.test(ua) ? "Windows" : /Mac/.test(ua) ? "Mac" : "جهاز آخر";
+  const br = /CriOS|Chrome/.test(ua)&&!/Edg/.test(ua) ? "Chrome" : /FxiOS|Firefox/.test(ua) ? "Firefox" : /Edg/.test(ua) ? "Edge" : /Instagram/.test(ua) ? "Instagram" : /Safari/.test(ua) ? "Safari" : "متصفح آخر";
   s.sentKey = key; save();
   const fail = ()=>{ s.sentKey=""; save(); };
   try{
     fetch(NOTES_URL,{method:"POST",keepalive:true,headers:{"Content-Type":"application/json","Accept":"application/json"},
-      body:JSON.stringify({"القصة":title,"التقييم":stars,"الملاحظة":note||"—",_subject:(note?"ملاحظة جديدة":"تقييم جديد")+" على «"+title+"» "+(rating?rating+"★":"")})})
+      body:JSON.stringify({"القصة":title,"التقييم":stars,"الملاحظة":note||"—","الجهاز":os+" · "+br,_subject:(note?"ملاحظة جديدة":"تقييم جديد")+" على «"+title+"» "+(rating?rating+"★":"")})})
       .then(r=>{ if(!r.ok) fail(); }).catch(fail);
   }catch(e){ fail(); }
 }
