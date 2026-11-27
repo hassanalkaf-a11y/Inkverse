@@ -613,8 +613,12 @@ let rsz; window.addEventListener("resize",()=>{clearTimeout(rsz);rsz=setTimeout(
   LOADED = true; render();
 })();
 if("serviceWorker" in navigator){
-  let reloaded=false;
-  navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(reloaded) return; reloaded=true; location.reload(); });
+  // an update never interrupts reading: refresh only when no story is open, otherwise wait until it is closed
+  let pendingReload=false, reloaded=false;
+  const busy=()=>document.getElementById("reader").classList.contains("on")||document.getElementById("scrim").classList.contains("on");
+  const doReload=()=>{ if(reloaded) return; reloaded=true; location.reload(); };
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(busy()) pendingReload=true; else doReload(); });
+  setInterval(()=>{ if(pendingReload && !busy()) doReload(); },1500);
   window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));
   document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{}); });
 }
