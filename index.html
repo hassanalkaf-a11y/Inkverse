@@ -239,7 +239,7 @@ textarea:focus,.field input:focus{outline:none;border-color:var(--gold)}
   <div class="wrap">
     <div class="top">
       <div class="brand"><img src="icon-192.png" alt=""><b>Inkverse</b></div>
-      <button class="iconbtn" id="searchBtn" aria-label="بحث"></button>
+      <div style="display:flex;gap:2px"><button class="iconbtn" id="bellBtn" aria-label="تفعيل الإشعارات" style="display:none;position:relative;color:var(--gold)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><i style="position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--gold2)"></i></button><button class="iconbtn" id="searchBtn" aria-label="بحث"></button></div>
     </div>
     <div class="searchrow" id="searchRow"><input id="q" placeholder="ابحث في القصص…" autocomplete="off"></div>
     <div class="tabs" id="tabs"></div>
@@ -668,34 +668,6 @@ if("serviceWorker" in navigator){
 }
 </script>
 <script data-goatcounter="https://inkverse-stories.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
-<div id="a2hs" role="dialog" aria-label="أضف التطبيق"><button class="x" aria-label="إغلاق">×</button><h5>خلّ Inkverse على شاشتك ✦</h5><p id="a2hsMsg"></p></div>
-<script>
-(function(){
-  const KEY="inkverse:a2hs", box=document.getElementById("a2hs"), msg=document.getElementById("a2hsMsg");
-  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
-  let seen; try{ seen=localStorage.getItem(KEY); }catch(e){}
-  if(standalone || seen) return;
-  const ua=navigator.userAgent, ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
-  const share='<span class="sh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg></span>';
-  const hide=()=>{ box.classList.remove("on"); try{ localStorage.setItem(KEY,"1"); }catch(e){} };
-  box.querySelector(".x").onclick=hide;
-  const show=()=>setTimeout(()=>box.classList.add("on"),5500);
-  if(ios){
-    const inApp=/Instagram|FBAN|FBAV|Snapchat|Line\//.test(ua) || !/Safari/.test(ua);
-    msg.innerHTML = inApp
-      ? "افتح الرابط في <b>Safari</b>، وبعدها اضغط "+share+" ثم «إضافة إلى الشاشة الرئيسية» عشان يفتح معك كتطبيق ويوصلك كل جديد."
-      : "اضغط "+share+" تحت، وبعدها «إضافة إلى الشاشة الرئيسية» عشان يفتح معك كتطبيق ويوصلك كل جديد.";
-    show();
-  } else {
-    addEventListener("beforeinstallprompt",e=>{
-      e.preventDefault();
-      msg.innerHTML="ثبّته على جوالك عشان يفتح معك كتطبيق ويوصلك كل جديد.<br><button class=\"go\">تثبيت</button>";
-      box.querySelector(".go").onclick=()=>{ hide(); e.prompt(); };
-      show();
-    });
-  }
-})();
-</script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -712,6 +684,55 @@ if("serviceWorker" in navigator){
       }]}}
     });
   });
+</script>
+<div id="a2hs" role="dialog" aria-label="أضف التطبيق"><button class="x" aria-label="إغلاق">×</button><h5>خلّ Inkverse على شاشتك ✦</h5><p id="a2hsMsg"></p></div>
+<script>
+(function(){
+  const KEY="inkverse:a2hs", box=document.getElementById("a2hs"), msg=document.getElementById("a2hsMsg"), bell=document.getElementById("bellBtn");
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  const ua=navigator.userAgent, ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
+  const share='<span class="sh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg></span>';
+  let last=0; try{ last=+localStorage.getItem(KEY)||0; }catch(e){}
+  const fresh = Date.now()-last > 3*864e5;
+  const hide=()=>{ box.classList.remove("on"); try{ localStorage.setItem(KEY,String(Date.now())); }catch(e){} };
+  box.querySelector(".x").onclick=hide;
+  const iosMsg=()=>{
+    const inApp=/Instagram|FBAN|FBAV|Snapchat|Line\//.test(ua) || !/Safari/.test(ua);
+    msg.innerHTML = (inApp ? "افتح الرابط في <b>Safari</b> أول، وبعدها " : "")
+      + "اضغط "+share+" ثم «إضافة إلى الشاشة الرئيسية»، وافتحه من الأيقونة عشان يوصلك إشعار مع كل قصة جديدة."
+      + "<br><span style=\"color:var(--muted);font-size:12.5px\">فاتحه من الواتساب؟ اضغط أيقونة البوصلة أو «فتح في Safari».</span>";
+  };
+  if(ios && !standalone){
+    iosMsg();
+    if(fresh) setTimeout(()=>box.classList.add("on"),5500);
+    bell.style.display="grid";
+    bell.onclick=()=>{ iosMsg(); box.classList.add("on"); };
+    return;
+  }
+  if(!standalone){
+    addEventListener("beforeinstallprompt",e=>{
+      e.preventDefault();
+      msg.innerHTML="ثبّته على جوالك عشان يفتح معك كتطبيق ويوصلك كل جديد.<br><button class=\"go\">تثبيت</button>";
+      box.querySelector(".go").onclick=()=>{ hide(); e.prompt(); };
+      if(fresh) setTimeout(()=>box.classList.add("on"),5500);
+    });
+  }
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal){
+    try{
+      if(!OneSignal.Notifications.isPushSupported()) return;
+      const sync=()=>{ bell.style.display = OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn ? "none" : "grid"; };
+      sync();
+      OneSignal.Notifications.addEventListener("permissionChange", sync);
+      OneSignal.User.PushSubscription.addEventListener("change", sync);
+      bell.onclick=async()=>{
+        if(OneSignal.Notifications.permission) await OneSignal.User.PushSubscription.optIn();
+        else await OneSignal.Notifications.requestPermission();
+        sync();
+      };
+    }catch(e){}
+  });
+})();
 </script>
 </body>
 </html>
