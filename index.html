@@ -678,7 +678,7 @@ if("serviceWorker" in navigator){
       serviceWorkerParam: { scope: "/Inkverse/push/" },
       notifyButton: { enable: false },
       promptOptions: { slidedown: { prompts: [{
-        type: "push", autoPrompt: true,
+        type: "push", autoPrompt: false,
         text: { actionMessage: "تبي يوصلك إشعار أول ما تنزل قصة جديدة في Inkverse؟", acceptButton: "إيه", cancelButton: "لاحقًا" },
         delay: { pageViews: 1, timeDelay: 8 }
       }]}}
@@ -738,11 +738,27 @@ if("serviceWorker" in navigator){
       sync();
       OneSignal.Notifications.addEventListener("permissionChange", sync);
       OneSignal.User.PushSubscription.addEventListener("change", sync);
-      bell.onclick=async()=>{
-        if(OneSignal.Notifications.permission) await OneSignal.User.PushSubscription.optIn();
-        else await OneSignal.Notifications.requestPermission();
+      const subscribe=async()=>{
+        try{
+          if(!OneSignal.Notifications.permission) await OneSignal.Notifications.requestPermission();
+          if(OneSignal.Notifications.permission) await OneSignal.User.PushSubscription.optIn();
+        }catch(e){}
         sync();
       };
+      bell.onclick=subscribe;
+      const subbed=()=>OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn;
+      const NK="inkverse:notif-later"; let later=0; try{ later=+localStorage.getItem(NK)||0; }catch(e){}
+      if(!subbed() && Date.now()-later > 864e5){
+        setTimeout(()=>{
+          if(subbed()) return;
+          box.querySelector("h5").textContent="لا تفوّتك قصة ✦";
+          msg.innerHTML="تبي يوصلك إشعار أول ما تنزل قصة جديدة؟<br><button class=\"go\">فعّل الإشعارات</button> <button class=\"go\" data-later style=\"background:none;color:var(--muted)\">لاحقًا</button>";
+          box.querySelector(".go").onclick=async()=>{ box.classList.remove("on"); await subscribe(); };
+          box.querySelector("[data-later]").onclick=()=>{ box.classList.remove("on"); try{ localStorage.setItem(NK,String(Date.now())); }catch(e){} };
+          box.querySelector(".x").onclick=box.querySelector("[data-later]").onclick;
+          box.classList.add("on");
+        }, standalone ? 4500 : 9000);
+      }
     }catch(e){}
   });
 })();
