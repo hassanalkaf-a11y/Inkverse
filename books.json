@@ -7,7 +7,8 @@
   "year": 2026,
   "minutes": 2,
   "cover": "stories/laqta-nadira.jpg",
-  "file": "stories/laqta-nadira.txt"
+  "file": "stories/laqta-nadira.txt",
+  "new": true
  },
  {
   "id": "tawqeet-sayyi",

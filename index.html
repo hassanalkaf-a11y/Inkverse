@@ -180,6 +180,15 @@ textarea:focus,.field input:focus{outline:none;border-color:var(--gold)}
 .sthead h1{font-size:1.9em;line-height:1.3;margin:0 0 .3em;color:var(--gold2)}
 .stmeta{font-family:var(--ui);font-size:13px;color:var(--muted)}
 .rtext p.stclue{text-align:center;direction:ltr;font-family:"Cormorant Garamond",Georgia,serif;color:var(--gold2);letter-spacing:.06em;font-size:1.05em;margin:1.2em 0 1.4em}
+.card{position:relative}
+.newb{position:absolute;top:-7px;left:-6px;z-index:2;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#000;font-family:var(--ui);font-weight:600;font-size:11px;line-height:1;padding:5px 8px 6px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 0 2px #000;pointer-events:none}
+.react{margin:1.2em auto 3em;text-align:center;font-family:var(--ui)}
+.react h6{margin:0 0 14px;font-size:14px;font-weight:500;color:var(--muted)}
+.react .rx{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+.react button{background:var(--s2);border:1px solid var(--line2);border-radius:14px;padding:9px 2px 7px;width:55px;cursor:pointer;color:var(--muted);font:inherit;font-size:11px;transition:transform .15s,border-color .2s,background .2s}
+.react button b{display:block;font-size:25px;line-height:1.15;margin-bottom:3px;font-weight:400}
+.react button.on{border-color:var(--gold);background:rgba(201,163,90,.12);color:var(--gold2);transform:scale(1.07)}
+.react small{display:block;margin-top:12px;font-size:12px;color:var(--dim)}
 .stbreak,.stend{text-align:center;color:var(--gold);margin:1.6em 0;letter-spacing:.2em}
 .stend{font-size:15px;margin-top:3em;color:var(--muted)}
 .rnav{padding-bottom:calc(10px + env(safe-area-inset-bottom))!important;display:flex;align-items:center;gap:10px;padding:10px;border-top:1px solid var(--line)}
@@ -401,7 +410,7 @@ function render(){
   if(!rows.length) rows.push([]);
   const msg = !LOADED ? "جارٍ فتح المكتبة…" : all.length ? (view.shelf==="all"?"لا توجد نتائج":"لا توجد قصص هنا بعد") : "القصص في الطريق… ✦";
   grid.innerHTML = `<div style="--bw:${bw}px;--tf:${tf}px">` + rows.map(r=>`<div class="shelf" style="gap:${gap}px">${
-    r.length ? r.map(b=>`<div class="card" data-id="${esc(b.id)}">${coverHTML(b)}</div>`).join("") : `<div class="empty">${I.book}${msg}</div>`
+    r.length ? r.map(b=>`<div class="card" data-id="${esc(b.id)}">${b.new&&!(state[b.id]||{}).opened?`<span class="newb">جديد</span>`:""}${coverHTML(b)}</div>`).join("") : `<div class="empty">${I.book}${msg}</div>`
   }</div><div class="ledge"></div>`).join("") + `</div>`;
 }
 
@@ -472,7 +481,16 @@ function renderStory(el, b, text){
     node.dir="auto"; el.appendChild(node);
   });
   const end=document.createElement("div"); end.className="stend"; end.textContent="✦  النهاية  ✦"; el.appendChild(end);
+  const cur=(state[b.id]||{}).reaction||"";
+  const rx=document.createElement("div"); rx.className="react";
+  rx.innerHTML=`<h6>كيف كانت؟</h6><div class="rx">${REACTS.map(([e,l])=>`<button data-rx="${e}" class="${cur===e?"on":""}"><b>${e}</b>${l}</button>`).join("")}</div><small>ردة فعلك تصل للكاتب</small>`;
+  rx.onclick=ev=>{ const bt=ev.target.closest("[data-rx]"); if(!bt) return; const s=st(b.id), v=bt.dataset.rx;
+    s.reaction = s.reaction===v ? "" : v; save();
+    rx.querySelectorAll("[data-rx]").forEach(x=>x.classList.toggle("on",x.dataset.rx===s.reaction));
+    clearTimeout(rx._t); rx._t=setTimeout(()=>sendNote(b.id),2500); };
+  el.appendChild(rx);
 }
+const REACTS=[["😨","مرعبة"],["🤯","صدمتني"],["🤔","حيّرتني"],["💔","أثّرت فيّ"],["👏","أبدعت"]];
 // ---- reader (right-to-left page turning) ----
 const R = {id:null,pdf:null,page:1,total:0,zoom:1,type:null,busy:false};
 async function openReader(id){
@@ -482,7 +500,7 @@ async function openReader(id){
   Object.assign(R,{id,pdf:null,page:Math.max(1,s.page||1),zoom:1});
   $("rTitle").textContent = b.title;
   try{ if(window.goatcounter && goatcounter.count) goatcounter.count({path:"/قصة/"+b.title, title:b.title, event:true}); }catch(e){}
-  store.set("lastRead",id); save();
+  s.opened=true; store.set("lastRead",id); save();
   $("rMarkList").classList.remove("on");
   $("rStage").innerHTML = '<div class="rload">جارٍ فتح الكتاب…</div>';
   $("reader").classList.add("on");
@@ -590,12 +608,14 @@ $("rStage").addEventListener("click",()=>$("rMarkList").classList.remove("on"));
 const NOTES_URL = "https://formspree.io/f/mljbkgjo";
 function sendNote(id){
   const s = state[id]; if(!s) return;
-  const note = (s.notes||"").trim(), rating = s.rating||0;
-  if(!note && !rating) return;
-  const key = rating+"|"+note;
+  const note = (s.notes||"").trim(), rating = s.rating||0, reaction = s.reaction||"";
+  if(!note && !rating && !reaction) return;
+  const key = rating+"|"+reaction+"|"+note;
   if(key===s.sentKey) return;
   const b = books().find(x=>x.id===id), title = b?b.title:id;
   const stars = rating ? "★".repeat(rating)+"☆".repeat(5-rating)+" ("+rating+"/5)" : "بدون تقييم";
+  const rlabel = reaction ? reaction+" "+((REACTS.find(r=>r[0]===reaction)||[])[1]||"") : "—";
+  const kind = note ? "ملاحظة جديدة" : rating ? "تقييم جديد" : "ردة فعل جديدة";
   const ua = navigator.userAgent;
   const os = /iPad/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1) ? "iPad" : /iPhone/.test(ua) ? "iPhone" : /Android/.test(ua) ? "Android" : /Windows/.test(ua) ? "Windows" : /Mac/.test(ua) ? "Mac" : "جهاز آخر";
   const br = /CriOS|Chrome/.test(ua)&&!/Edg/.test(ua) ? "Chrome" : /FxiOS|Firefox/.test(ua) ? "Firefox" : /Edg/.test(ua) ? "Edge" : /Instagram/.test(ua) ? "Instagram" : /Safari/.test(ua) ? "Safari" : "متصفح آخر";
@@ -603,7 +623,7 @@ function sendNote(id){
   const fail = ()=>{ s.sentKey=""; save(); };
   try{
     fetch(NOTES_URL,{method:"POST",keepalive:true,headers:{"Content-Type":"application/json","Accept":"application/json"},
-      body:JSON.stringify({"القصة":title,"التقييم":stars,"الملاحظة":note||"—","الجهاز":os+" · "+br,_subject:(note?"ملاحظة جديدة":"تقييم جديد")+" على «"+title+"» "+(rating?rating+"★":"")})})
+      body:JSON.stringify({"القصة":title,"التقييم":stars,"ردة الفعل":rlabel,"الملاحظة":note||"—","الجهاز":os+" · "+br,_subject:kind+" على «"+title+"» "+(rating?rating+"★ ":"")+reaction})})
       .then(r=>{ if(!r.ok) fail(); }).catch(fail);
   }catch(e){ fail(); }
 }
