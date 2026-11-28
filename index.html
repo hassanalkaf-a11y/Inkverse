@@ -34,6 +34,13 @@
   --gold:#c9a35a;--gold2:#e7cd94;--goldd:#7d6230;--goldline:rgba(201,163,90,.28);
   --display:"Amiri",serif;--ui:"IBM Plex Sans Arabic",system-ui,sans-serif;--latin:"Cormorant Garamond",serif;
 }
+#a2hs{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:40;background:rgba(10,10,10,.96);border:1px solid var(--goldline);border-radius:16px;padding:16px 16px 14px;box-shadow:0 18px 50px rgba(0,0,0,.7);transform:translateY(140%);transition:transform .5s cubic-bezier(.2,.8,.2,1);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#a2hs.on{transform:none}
+#a2hs h5{margin:0 0 6px;font-family:var(--display);font-size:19px;color:var(--gold2);font-weight:700}
+#a2hs p{margin:0;font-size:14px;line-height:1.9;color:var(--ink)}
+#a2hs .sh{display:inline-flex;vertical-align:-4px;color:var(--gold)}
+#a2hs .x{position:absolute;top:8px;left:10px;background:none;border:0;color:var(--muted);font-size:22px;padding:4px 8px;cursor:pointer}
+#a2hs .go{margin-top:10px;background:var(--gold);color:#000;border:0;border-radius:10px;padding:9px 18px;font:inherit;font-weight:600;cursor:pointer}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{background:#000}
 body{margin:0;color:var(--ink);font:15px/1.65 var(--ui);min-height:100vh}
@@ -661,5 +668,33 @@ if("serviceWorker" in navigator){
 }
 </script>
 <script data-goatcounter="https://inkverse-stories.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<div id="a2hs" role="dialog" aria-label="أضف التطبيق"><button class="x" aria-label="إغلاق">×</button><h5>خلّ Inkverse على شاشتك ✦</h5><p id="a2hsMsg"></p></div>
+<script>
+(function(){
+  const KEY="inkverse:a2hs", box=document.getElementById("a2hs"), msg=document.getElementById("a2hsMsg");
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  let seen; try{ seen=localStorage.getItem(KEY); }catch(e){}
+  if(standalone || seen) return;
+  const ua=navigator.userAgent, ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
+  const share='<span class="sh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg></span>';
+  const hide=()=>{ box.classList.remove("on"); try{ localStorage.setItem(KEY,"1"); }catch(e){} };
+  box.querySelector(".x").onclick=hide;
+  const show=()=>setTimeout(()=>box.classList.add("on"),5500);
+  if(ios){
+    const inApp=/Instagram|FBAN|FBAV|Snapchat|Line\//.test(ua) || !/Safari/.test(ua);
+    msg.innerHTML = inApp
+      ? "افتح الرابط في <b>Safari</b>، وبعدها اضغط "+share+" ثم «إضافة إلى الشاشة الرئيسية» عشان يفتح معك كتطبيق ويوصلك كل جديد."
+      : "اضغط "+share+" تحت، وبعدها «إضافة إلى الشاشة الرئيسية» عشان يفتح معك كتطبيق ويوصلك كل جديد.";
+    show();
+  } else {
+    addEventListener("beforeinstallprompt",e=>{
+      e.preventDefault();
+      msg.innerHTML="ثبّته على جوالك عشان يفتح معك كتطبيق ويوصلك كل جديد.<br><button class=\"go\">تثبيت</button>";
+      box.querySelector(".go").onclick=()=>{ hide(); e.prompt(); };
+      show();
+    });
+  }
+})();
+</script>
 </body>
 </html>
