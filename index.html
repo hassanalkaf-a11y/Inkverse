@@ -709,6 +709,15 @@ if("serviceWorker" in navigator){
     bell.onclick=()=>{ iosMsg(); box.classList.add("on"); };
     return;
   }
+  const android=/Android/.test(ua), webview=android && (/; wv\)/.test(ua) || /WhatsApp|Instagram|FBAN|FBAV|FB_IAB|Snapchat|musical_ly|TikTok/.test(ua));
+  if(webview){
+    const intent="intent://"+location.host+location.pathname+"#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url="+encodeURIComponent(location.href)+";end";
+    msg.innerHTML="أنت فاتحه من داخل تطبيق ثاني، والإشعارات والتثبيت ما يشتغلون هنا. افتحه في <b>Chrome</b> عشان يوصلك كل جديد.<br><a class=\"go\" style=\"display:inline-block;text-decoration:none\" href=\""+intent+"\">افتح في Chrome</a>";
+    setTimeout(()=>box.classList.add("on"),4500);
+    bell.style.display="grid";
+    bell.onclick=()=>box.classList.add("on");
+    return;
+  }
   if(!standalone){
     addEventListener("beforeinstallprompt",e=>{
       e.preventDefault();
