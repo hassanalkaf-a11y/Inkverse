@@ -717,6 +717,10 @@ if("serviceWorker" in navigator){
       if(fresh) setTimeout(()=>box.classList.add("on"),5500);
     });
   }
+  if("Notification" in window && Notification.permission!=="granted"){
+    bell.style.display="grid";
+    bell.onclick=()=>{ try{ Notification.requestPermission().then(p=>{ if(p==="granted") bell.style.display="none"; }); }catch(e){} };
+  }
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal){
     try{
