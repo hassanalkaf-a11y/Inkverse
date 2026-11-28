@@ -728,7 +728,7 @@ if("serviceWorker" in navigator){
   }
   if("Notification" in window && Notification.permission!=="granted"){
     bell.style.display="grid";
-    bell.onclick=()=>{ try{ Notification.requestPermission().then(p=>{ if(p==="granted") bell.style.display="none"; }); }catch(e){} };
+    bell.onclick=()=>{ window.OneSignalDeferred=window.OneSignalDeferred||[]; OneSignalDeferred.push(async function(OS){ try{ await OS.Notifications.requestPermission(); if(OS.Notifications.permission) await OS.User.PushSubscription.optIn(); }catch(e){} }); };
   }
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal){
