@@ -696,5 +696,22 @@ if("serviceWorker" in navigator){
   }
 })();
 </script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal){
+    await OneSignal.init({
+      appId: "71dc64cd-88e5-4f88-b6c0-6095817b4430",
+      serviceWorkerPath: "Inkverse/push/OneSignalSDKWorker.js",
+      serviceWorkerParam: { scope: "/Inkverse/push/" },
+      notifyButton: { enable: false },
+      promptOptions: { slidedown: { prompts: [{
+        type: "push", autoPrompt: true,
+        text: { actionMessage: "تبي يوصلك إشعار أول ما تنزل قصة جديدة في Inkverse؟", acceptButton: "إيه", cancelButton: "لاحقًا" },
+        delay: { pageViews: 1, timeDelay: 8 }
+      }]}}
+    });
+  });
+</script>
 </body>
 </html>
